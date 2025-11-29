@@ -37,83 +37,6 @@ const generateRoomId = () => {
 // Join Room View
 // ===============================================
 
-// const JoinRoomView = ({ onScreenChange, username }) => {
-//   const [roomCode, setRoomCode] = useState("");
-//   const navigate = useNavigate();
-
-//   const handleJoin = () => {
-//     if (roomCode.trim().length === 6) {
-//       navigate(`/room/${roomCode}`);
-//     }
-//   };
-
-//   const handleChange = (e) => {
-//     // Allow only letters and numbers (A-Z, 0-9) and limit to 6 characters
-//     const value = e.target.value
-//       .toUpperCase()
-//       .replace(/[^A-Z0-9]/g, "")
-//       .slice(0, 6);
-//     setRoomCode(value);
-//   };
-
-//   const handleKeyDown = (e) => {
-//     if (e.key === "Enter" && roomCode.length === 6) {
-//       handleJoin();
-//     }
-//   };
-
-//   return (
-//     <div className="flex flex-col items-center justify-between min-h-screen w-full max-w-md mx-auto pb-8">
-//       {/* Header */}
-//       <header className="sticky top-0 w-full flex items-center gap-2 pt-6 pb-4 px-6 bg-black text-white border-b border-gray-600">
-//         <button
-//           onClick={() => onScreenChange("home")}
-//           className="flex items-center gap-2 text-gray-400 hover:text-pink-400 transition"
-//         >
-//           <CornerUpLeft size={20} />
-//           <span className="font-medium">Back</span>
-//         </button>
-//       </header>
-
-//       {/* Hero Illustration */}
-//       <div className="flex flex-col items-center mt-20 text-center px-6">
-//         <div className="w-40 h-40 bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
-//           <svg
-//             xmlns="http://www.w3.org/2000/svg"
-//             className="w-16 h-16 text-white"
-//             viewBox="0 0 24 24"
-//             fill="currentColor"
-//           >
-//             <path d="M12 2a10 10 0 100 20 10 10 0 000-20zM11 16v-4H8l4-5v4h3l-4 5z" />
-//           </svg>
-//         </div>
-//         <p className="mt-6 text-gray-400 max-w-xs">
-//           Enter your friend’s room code below and jump into the watch party 🍿
-//         </p>
-//       </div>
-
-//       {/* Input + Actions */}
-//       <div className="w-full flex flex-col items-center px-6 mt-10">
-//         <input
-//           type="text"
-//           value={roomCode}
-//           onChange={handleChange}
-//           onKeyDown={handleKeyDown}
-//           placeholder="Enter 6-character room code"
-//           className="w-full px-4 py-3 rounded-lg bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 text-center tracking-widest text-lg"
-//         />
-//         <button
-//           onClick={handleJoin}
-//           disabled={roomCode.length !== 6}
-//           className="w-full mt-4 py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition disabled:opacity-50"
-//         >
-//           Join Room
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
 const JoinRoomView = ({ onScreenChange, username }) => {
   const [roomCode, setRoomCode] = useState("");
   const [error, setError] = useState("");
@@ -265,10 +188,6 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto min-h-screen pb-8">
       {/* Header */}
-      {/* <header className="sticky top-0 w-full flex justify-between items-center pt-6 pb-4 px-6 bg-black text-white border-b border-gray-600">
-        <h1 className="text-3xl font-bold">{greeting}</h1>
-        <Settings size={24} className="text-gray-400" />
-      </header> */}
       <header className="sticky top-0 w-full flex justify-between items-center pt-6 pb-4 px-6 bg-black text-white border-b border-gray-600 relative">
         <h1 className="text-3xl font-bold">{greeting}</h1>
 

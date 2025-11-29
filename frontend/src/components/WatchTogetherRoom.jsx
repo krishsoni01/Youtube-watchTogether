@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   LogOut,
+  Copy,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -284,7 +285,16 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     });
 
     socket.on("roomJoined", (data) => {
-      // console.log("Room joined with state:", data);
+      // 🔥 Load previous messages
+      if (data.previousMessages && data.previousMessages.length > 0) {
+        setMessages(
+          data.previousMessages.map((msg) => ({
+            username: msg.username,
+            message: msg.message,
+            userId: msg.userId,
+          }))
+        );
+      }
 
       if (data.videoId) {
         setVideoId(data.videoId);
@@ -385,7 +395,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     });
 
     socket.on("roomDeleted", (data) => {
-      alert(data.message || "The room has been deleted.");
+      toast.info(data.message || "The room has been deleted.");
       navigate("/");
     });
 
@@ -580,6 +590,44 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
       navigate("/");
   };
 
+  const handleDeleteRoom = async () => {
+    if (
+      !window.confirm(
+        "⚠️ Are you sure you want to delete this room? All users will be disconnected."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/rooms/${roomId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: localUsername,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to delete room");
+        return;
+      }
+
+      toast.success("Room deleted successfully");
+      navigate("/");
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      toast.error("Failed to delete room. Please try again.");
+    }
+  };
+
   // --- ControlsOverlay Component ---
   const ControlsOverlay = ({
     isFullscreen,
@@ -716,6 +764,16 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
               Watch<span className="text-cyan-400">Together</span>{" "}
               <span className="text-cyan-400 text-sm ml-1">
                 | Room: {roomId}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(roomId);
+                    toast.success("Room code copied!");
+                  }}
+                  className="text-white hover:text-cyan-400 transition"
+                  title="Copy Room Code"
+                >
+                  <Copy size={18} className="" />
+                </button>
               </span>
             </h1>
 
@@ -756,13 +814,25 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
                 </button>
               </div>
 
-              <button
-                onClick={handleLeaveRoom}
-                className="px-4 py-2 mt-2 lg:mt-0 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition shadow-md w-full sm:w-auto"
-              >
-                <LogOut className="inline mr-2" size={18} />
-                Leave Room
-              </button>
+              {localUsername !== hostName && (
+                <button
+                  onClick={handleLeaveRoom}
+                  className="px-4 py-2 mt-2 lg:mt-0 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition shadow-md w-full sm:w-auto"
+                >
+                  <LogOut className="inline mr-2" size={18} />
+                  Leave Room
+                </button>
+              )}
+
+              {localUsername === hostName && (
+                <button
+                  onClick={handleDeleteRoom}
+                  className="px-4 py-2 mt-2 lg:mt-0 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition shadow-md w-full sm:w-auto flex items-center justify-center gap-2"
+                >
+                  <LogOut className="inline mr-2" size={18} />
+                  Delete Room
+                </button>
+              )}
             </div>
           </div>
         </div>

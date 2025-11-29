@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const Room = require("./models/room");
 const roomRoutes = require("./routes/room");
 const cors = require("cors");
+const Message = require("./models/message");
 
 // Try loading auth routes safely
 let authRoutes;
@@ -62,7 +63,8 @@ if (authRoutes) {
   app.use("/api/auth", authRoutes);
 }
 
-app.use("/api/rooms", roomRoutes);
+// app.use("/api/rooms", roomRoutes);
+app.use("/api/rooms", roomRoutes(io));
 
 // =========================================================================
 // 3. HELPER FUNCTION
@@ -70,7 +72,59 @@ app.use("/api/rooms", roomRoutes);
 const normalizeRoomId = (id) => (id ? id.toUpperCase() : null);
 
 // =========================================================================
-// 4. SOCKET.IO CONNECTION LISTENER
+// 4. AUTO-CLEANUP: DELETE INACTIVE ROOMS (> 1 HOUR)
+// =========================================================================
+// const INACTIVITY_THRESHOLD = 1 * 60 * 1000; // 1 minute in milliseconds
+const INACTIVITY_THRESHOLD = 60 * 60 * 1000; // 1 hour in milliseconds
+
+const cleanupInactiveRooms = async () => {
+  try {
+    const cutoffTime = Date.now() - INACTIVITY_THRESHOLD;
+
+    const inactiveRooms = await Room.find({
+      lastActive: { $lt: new Date(cutoffTime) },
+    });
+
+    if (inactiveRooms.length > 0) {
+      console.log(
+        `🧹 Found ${inactiveRooms.length} inactive room(s) to clean up`
+      );
+
+      for (const room of inactiveRooms) {
+        io.in(room.roomCode).emit("roomDeleted", {
+          message: "Room closed due to inactivity (1 hour).",
+        });
+
+        const sockets = await io.in(room.roomCode).fetchSockets();
+        for (const socket of sockets) {
+          socket.leave(room.roomCode);
+          socket.disconnect(true);
+        }
+
+        // 🔥 Delete all messages for this room
+        await Message.deleteMany({ roomCode: room.roomCode });
+        console.log(`🗑️ Deleted messages for room: ${room.roomCode}`);
+      }
+
+      const result = await Room.deleteMany({
+        lastActive: { $lt: new Date(cutoffTime) },
+      });
+
+      console.log(`✅ Cleaned up ${result.deletedCount} inactive room(s)`);
+    }
+  } catch (error) {
+    console.error("❌ Error during inactive room cleanup:", error.message);
+  }
+};
+
+setInterval(cleanupInactiveRooms, 10 * 60 * 1000);
+// setInterval(cleanupInactiveRooms, 1 * 60 * 1000);
+
+// Run cleanup on server start
+cleanupInactiveRooms();
+
+// =========================================================================
+// 5. SOCKET.IO CONNECTION LISTENER
 // =========================================================================
 
 io.on("connection", (socket) => {
@@ -91,6 +145,8 @@ io.on("connection", (socket) => {
   });
 
   // --- JOIN ROOM HANDLER ---
+
+  // Update your joinRoom handler to load previous messages
   socket.on("joinRoom", async (data) => {
     let roomIdentifier = normalizeRoomId(data.roomId || roomId);
     if (!roomIdentifier) {
@@ -102,13 +158,12 @@ io.on("connection", (socket) => {
       const username = socket.data.username;
       const userId = socket.data.userId;
 
-      // 1️⃣ Check if room exists to determine if user is new
+      // Check if room exists
       const existingRoom = await Room.findOne({ roomCode: roomIdentifier });
       const isNewUser =
         !existingRoom || !existingRoom.users.includes(username || userId);
 
-      // 2️⃣ Add the user (or create room if not found)
-      // 🔥 FIX: When creating a new room, ensure isPlaying is false
+      // Add user to room
       await Room.findOneAndUpdate(
         { roomCode: roomIdentifier },
         {
@@ -116,14 +171,14 @@ io.on("connection", (socket) => {
           $set: { lastActive: Date.now() },
           $setOnInsert: {
             hostName: username,
-            isPlaying: false, // 🔥 NEW: Ensure video doesn't autoplay
+            isPlaying: false,
             currentTime: 0,
           },
         },
         { new: true, upsert: true }
       );
 
-      // 3️⃣ Fetch latest room state
+      // Fetch latest room state
       const latestRoom = await Room.findOne({ roomCode: roomIdentifier });
 
       if (!latestRoom) {
@@ -131,19 +186,32 @@ io.on("connection", (socket) => {
         return socket.disconnect(true);
       }
 
-      // 4️⃣ Join room
+      // Join room
       socket.join(roomIdentifier);
       console.log(`${username} joined room: ${roomIdentifier}`);
 
-      // 5️⃣ Send the latest video state to this new user
+      // 🔥 Load previous messages for this room
+      const previousMessages = await Message.find({ roomCode: roomIdentifier })
+        .sort({ createdAt: 1 }) // Oldest first
+        .limit(100) // Optional: limit to last 100 messages
+        .lean();
+
+      // Send room state and previous messages
       socket.emit("roomJoined", {
         roomId: roomIdentifier,
         videoId: latestRoom.videoId || null,
         currentTime: latestRoom.currentTime || 0,
-        isPlaying: latestRoom.isPlaying || false, // 🔥 Send actual play state
+        isPlaying: latestRoom.isPlaying || false,
+        previousMessages: previousMessages.map((msg) => ({
+          id: msg._id,
+          username: msg.username,
+          message: msg.message,
+          ts: msg.createdAt.getTime(),
+          userId: msg.userId,
+        })),
       });
 
-      // 6️⃣ Update user list for all clients
+      // Update user list
       const socketsInRoom = await io.in(roomIdentifier).fetchSockets();
       const clientUsers = socketsInRoom.map((s) => ({
         id: s.data.userId,
@@ -152,12 +220,22 @@ io.on("connection", (socket) => {
 
       io.in(roomIdentifier).emit("userList", clientUsers);
 
-      // 7️⃣ Send join message ONLY if this is a new user
+      // Send join message ONLY if new user
       if (isNewUser) {
-        io.in(roomIdentifier).emit("chat-message", {
+        const joinMessage = new Message({
+          roomCode: roomIdentifier,
+          userId: "system",
           username: "System",
           message: `${username} joined the room.`,
-          ts: Date.now(),
+        });
+
+        await joinMessage.save();
+
+        io.in(roomIdentifier).emit("chat-message", {
+          id: joinMessage._id,
+          username: "System",
+          message: `${username} joined the room.`,
+          ts: joinMessage.createdAt.getTime(),
         });
       }
     } catch (error) {
@@ -173,7 +251,7 @@ io.on("connection", (socket) => {
       if (!roomIdentifier) return;
       const normalizedId = normalizeRoomId(roomIdentifier);
 
-      // 🔥 FIX: Broadcast to ALL users in the room (including sender for consistency)
+      // Broadcast to ALL users in the room
       io.in(normalizedId).emit("video-action", { action, time, videoId });
 
       try {
@@ -181,12 +259,12 @@ io.on("connection", (socket) => {
 
         switch (action) {
           case "play":
-            update.isPlaying = true; // 🔥 Update DB state
+            update.isPlaying = true;
             if (typeof time === "number") update.currentTime = time;
             break;
 
           case "pause":
-            update.isPlaying = false; // 🔥 Update DB state
+            update.isPlaying = false;
             if (typeof time === "number") update.currentTime = time;
             break;
 
@@ -197,7 +275,7 @@ io.on("connection", (socket) => {
           case "changeVideo":
             if (videoId) update.videoId = videoId;
             update.currentTime = 0;
-            update.isPlaying = false; // 🔥 Ensure new video doesn't autoplay
+            update.isPlaying = false;
             break;
 
           default:
@@ -206,7 +284,6 @@ io.on("connection", (socket) => {
         }
 
         if (Object.keys(update).length > 0) {
-          // ✅ Combined update with lastActive
           await Room.findOneAndUpdate(
             { roomCode: normalizedId },
             { $set: { ...update, lastActive: Date.now() } },
@@ -225,24 +302,44 @@ io.on("connection", (socket) => {
     if (!roomIdentifier) return;
     const normalizedId = normalizeRoomId(roomIdentifier);
     const username = socket.data.username || "Anon";
-    io.in(normalizedId).emit("chat-message", {
-      username,
-      message,
-      ts: Date.now(),
-      userId: socket.data.userId,
-    });
-    await Room.findOneAndUpdate(
-      { roomCode: normalizedId },
-      { lastActive: Date.now() }
-    );
+    const userId = socket.data.userId;
+
+    try {
+      // Save message to database
+      const newMessage = new Message({
+        roomCode: normalizedId,
+        userId: userId,
+        username: username,
+        message: message,
+      });
+
+      await newMessage.save();
+
+      // Broadcast message with ID
+      io.in(normalizedId).emit("chat-message", {
+        id: newMessage._id,
+        username,
+        message,
+        ts: newMessage.createdAt.getTime(),
+        userId: userId,
+      });
+
+      // Update room activity
+      await Room.findOneAndUpdate(
+        { roomCode: normalizedId },
+        { lastActive: Date.now() }
+      );
+    } catch (error) {
+      console.error("Error saving message:", error.message);
+      socket.emit("messageError", "Failed to send message");
+    }
   });
 
-  // --- DISCONNECTING HANDLER ---
   socket.on("disconnecting", async () => {
     console.log(
       `🔌 User disconnecting: ${socket.id} (${socket.data.username})`
     );
-    // Short delay to ensure room state is correct for fetchSockets
+
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     const rooms = Array.from(socket.rooms).filter((r) => r !== socket.id);
@@ -255,43 +352,58 @@ io.on("connection", (socket) => {
       // 1. Get the room from DB
       const room = await Room.findOne({ roomCode: normalizedId });
 
-      // 2. Handle HOST LEAVING (Room Deletion)
-      if (room && room.hostName === disconnectingUser) {
-        // Notify all users that the host left
-        io.in(normalizedId).emit("roomDeleted", {
-          message: "Room deleted because host (the creator) left.",
-        });
-
-        // Delete from DB
-        await Room.deleteOne({ roomCode: normalizedId });
+      if (!room) {
         console.log(
-          `🗑️ Room ${normalizedId} deleted because host ${disconnectingUser} left.`
+          `⚠️ Room ${normalizedId} not found in DB during disconnect`
+        );
+        continue;
+      }
+
+      // 2. 🔥 CHECK IF THIS USER IS THE HOST
+      if (room.hostName === disconnectingUser) {
+        console.log(
+          `👑 Host ${disconnectingUser} is leaving room ${normalizedId}. Deleting room...`
         );
 
-        // Force all users to leave the socket room
+        // Notify all users that the room is being closed
+        io.in(normalizedId).emit("roomDeleted", {
+          message: "Room closed because the host left.",
+        });
+
+        // 🔥 Delete all messages for this room
+        await Message.deleteMany({ roomCode: normalizedId });
+        console.log(`🗑️ Deleted messages for room: ${normalizedId}`);
+
+        // Delete room from database
+        await Room.deleteOne({ roomCode: normalizedId });
+        console.log(`🗑️ Room ${normalizedId} deleted from database`);
+
+        // Disconnect all remaining users
         const socketsRemaining = await io.in(normalizedId).fetchSockets();
         for (const s of socketsRemaining) {
           s.leave(normalizedId);
           s.disconnect(true);
         }
 
-        return;
+        console.log(`✅ All users disconnected from room ${normalizedId}`);
+        continue; // Skip to next room
       }
 
-      // --- Handle REGULAR USER LEAVING ---
-
-      // Remove the user from the room's users array in the DB
+      // 3. Handle REGULAR USER LEAVING (not host)
       if (userIdentifier) {
         await Room.findOneAndUpdate(
           { roomCode: normalizedId },
-          { $pull: { users: userIdentifier } }
+          {
+            $pull: { users: userIdentifier },
+            $set: { lastActive: Date.now() },
+          }
         );
         console.log(
-          `👤 Removed user ${userIdentifier} from DB for room ${normalizedId}.`
+          `👤 Removed user ${userIdentifier} from room ${normalizedId}`
         );
       }
 
-      // 3. Get remaining sockets (after this user leaves)
+      // 4. Update remaining users list
       const socketsRemaining = await io.in(normalizedId).fetchSockets();
       const users = socketsRemaining
         .filter((s) => s.id !== socket.id)
@@ -300,10 +412,9 @@ io.on("connection", (socket) => {
           name: s.data.username || "Anon",
         }));
 
-      // 4. Update user list for remaining users
       io.in(normalizedId).emit("userList", users);
 
-      // 5. Send leave chat message
+      // 5. Send leave message
       io.in(normalizedId).emit("chat-message", {
         username: "System",
         message: `${disconnectingUser} left the room.`,
@@ -311,15 +422,14 @@ io.on("connection", (socket) => {
       });
 
       console.log(
-        `Updated user list for room ${normalizedId}. Remaining: ${users.length}`
+        `✅ Updated room ${normalizedId}. Remaining users: ${users.length}`
       );
     }
   });
-  
 });
 
 // =========================================================================
-// 5. DATABASE AND SERVER STARTUP
+// 6. DATABASE AND SERVER STARTUP
 // =========================================================================
 const PORT = process.env.PORT || 5000;
 const mongoUri = process.env.MONGO_URI;
