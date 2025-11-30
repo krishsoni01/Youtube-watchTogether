@@ -179,13 +179,13 @@ const HomeView = ({ onScreenChange, userId, username }) => {
 
   const copyCode = () => {
     navigator.clipboard.writeText(roomId);
-    toast.success("Room code copied, redirecting...");
+    // toast.success("Room code copied, redirecting...");
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
       setShowPopup(false);
       navigate(`/room/${roomId}`);
-    }, 2000); // wait 2 seconds before redirect
+    }, 1000); // wait 1 seconds before redirect
   };
 
   return (

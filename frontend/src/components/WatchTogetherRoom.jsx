@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import React from "react";
 import io from "socket.io-client";
 import {
   Play,
@@ -74,6 +75,8 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
   const isRemoteActionRef = useRef(false);
   const previousUserIdsRef = useRef(new Set());
   const pendingVideoIdRef = useRef(null); // NEW: Track pending video changes
+  // Add this with your other refs
+  const previousVideoIdRef = useRef(videoId);
 
   // 🔥 FIX: Scroll to top on mount
   useEffect(() => {
@@ -83,16 +86,6 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
   // --- Effects & Callbacks ---
 
   useEffect(() => {
-    // const exitHandler = () => {
-    //   const isCurrentlyFullscreen = !!document.fullscreenElement;
-
-    //   if (isFullscreen && !isCurrentlyFullscreen) {
-    //     console.log("Exited fullscreen via native event (e.g., Esc key).");
-    //     setIsFullscreen(false);
-    //   } else if (!isFullscreen && isCurrentlyFullscreen) {
-    //     console.log("Entered fullscreen via native event.");
-    //     setIsFullscreen(true);
-    //   }
     const exitHandler = () => {
       const isCurrentlyFullscreen = !!document.fullscreenElement;
 
@@ -173,16 +166,11 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
             const duration = event.target.getDuration();
             setDuration(duration);
 
-            // 🔥 FIX: Load pending video if exists
-            if (pendingVideoIdRef.current) {
-              const pendingId = pendingVideoIdRef.current;
-              pendingVideoIdRef.current = null;
-              console.log("Loading pending video:", pendingId);
-              event.target.cueVideoById({
-                videoId: pendingId,
-                startSeconds: 0,
-              });
-            }
+            // 🔥 FIX: Just cue the current video without autoplay
+            event.target.cueVideoById({
+              videoId: videoId,
+              startSeconds: 0,
+            });
           },
           onStateChange: (event) => {
             if (event.data === window.YT.PlayerState.PLAYING) {
@@ -271,19 +259,22 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
 
   // 🔥 FIX: Improved video change handling
   useEffect(() => {
+    // Only cue if video actually changed
+    if (previousVideoIdRef.current === videoId) {
+      return;
+    }
+    previousVideoIdRef.current = videoId;
+
     if (playerRef.current && isPlayerReady) {
       console.log("Changing video to:", videoId);
-      try {
-        // Use cueVideoById to show thumbnail without autoplay
+      // Small delay to ensure player is stable
+      setTimeout(() => {
         playerRef.current.cueVideoById({
           videoId: videoId,
           startSeconds: 0,
         });
         setIsPlaying(false);
-      } catch (error) {
-        console.error("Error cueing video:", error);
-        pendingVideoIdRef.current = videoId;
-      }
+      }, 100);
     } else {
       pendingVideoIdRef.current = videoId;
     }
@@ -334,7 +325,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     });
 
     socket.on("roomJoined", (data) => {
-      // 🔥 Load previous messages
+      // Load previous messages
       if (data.previousMessages && data.previousMessages.length > 0) {
         setMessages(
           data.previousMessages.map((msg) => ({
@@ -345,32 +336,21 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
         );
       }
 
-      if (data.videoId) {
+      if (data.videoId && data.videoId !== videoId) {
         setVideoId(data.videoId);
       }
 
-      // 🔥 FIX: Auto-sync to host's position and play state
-      if (playerRef.current && isPlayerReady) {
-        if (data.currentTime !== undefined) {
-          playerRef.current.seekTo(data.currentTime, true);
-          setCurrentTime(data.currentTime);
-        }
+      // Wait for player to be ready before syncing
+      const syncPlayer = () => {
+        if (playerRef.current && isPlayerReady) {
+          // Cue the video first
+          playerRef.current.cueVideoById({
+            videoId: data.videoId || videoId,
+            startSeconds: data.currentTime || 0,
+          });
 
-        // Auto-sync play state - ONLY play if host is playing
-        if (data.isPlaying) {
+          // Then sync play state after a short delay
           setTimeout(() => {
-            playerRef.current.playVideo();
-            setIsPlaying(true);
-          }, 500); // Small delay to ensure seek completes
-        } else {
-          playerRef.current.pauseVideo();
-          setIsPlaying(false);
-        }
-      } else {
-        // Store state to apply when player is ready
-        setTimeout(() => {
-          if (playerRef.current && data.currentTime !== undefined) {
-            playerRef.current.seekTo(data.currentTime, true);
             if (data.isPlaying) {
               playerRef.current.playVideo();
               setIsPlaying(true);
@@ -378,8 +358,15 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
               playerRef.current.pauseVideo();
               setIsPlaying(false);
             }
-          }
-        }, 1000);
+          }, 300);
+        }
+      };
+
+      // If player is ready, sync immediately. Otherwise, wait
+      if (isPlayerReady) {
+        setTimeout(syncPlayer, 500);
+      } else {
+        setTimeout(syncPlayer, 1500);
       }
 
       if (data?.users) {
@@ -762,7 +749,23 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     playerRef,
     sendVideoAction,
   }) => {
-    if (isFullscreen) {
+    // if (isFullscreen) {
+    //   return null;
+    // }
+    // Hide custom controls on mobile screens (below 768px)
+    const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+
+    React.useEffect(() => {
+      const handleResize = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    // Don't render custom controls on mobile
+    if (isMobile) {
       return null;
     }
     const controlsBarClasses = `
