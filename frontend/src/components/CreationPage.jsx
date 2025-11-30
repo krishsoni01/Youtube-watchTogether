@@ -85,7 +85,7 @@ const JoinRoomView = ({ onScreenChange, username }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-screen w-full max-w-md mx-auto pb-8">
+    <div className="flex flex-col items-center sm:items-start h-screen w-full max-w-md mx-auto pb-8">
       {/* Header */}
       <header className="sticky top-0 w-full flex items-center gap-2 pt-6 pb-4 px-6 bg-black text-white border-b border-gray-600">
         <button
@@ -98,7 +98,7 @@ const JoinRoomView = ({ onScreenChange, username }) => {
       </header>
 
       {/* Hero Illustration */}
-      <div className="flex flex-col items-center mt-20 text-center px-6">
+      <div className="flex flex-col items-center mt-20 text-center mx-auto">
         <div className="w-40 h-40 bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -189,7 +189,7 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-md mx-auto min-h-screen pb-8">
+    <div className="flex flex-col items-center w-full max-w-md mx-auto h-screen pb-8 overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 w-full flex justify-between items-center pt-6 pb-4 px-6 bg-black text-white border-b border-gray-600 relative">
         <h1 className="text-3xl font-bold">{greeting}</h1>
@@ -364,7 +364,7 @@ const CreationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="h-screen bg-black text-white">
       {screen === "home" && (
         <HomeView
           onScreenChange={setScreen}

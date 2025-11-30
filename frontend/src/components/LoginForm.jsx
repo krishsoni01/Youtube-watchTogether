@@ -40,7 +40,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-4">
+    <div className="h-screen flex flex-col items-center justify-start sm:justify-center bg-black text-white px-4 pt-10 sm:pt-0 overflow-hidden">
       {/* Login Card */}
       <div className="w-full max-w-md bg-gray-900 rounded-2xl shadow-lg p-8">
         <div className="flex flex-col items-center">

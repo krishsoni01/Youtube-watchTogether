@@ -75,18 +75,53 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
   const previousUserIdsRef = useRef(new Set());
   const pendingVideoIdRef = useRef(null); // NEW: Track pending video changes
 
+  // 🔥 FIX: Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // --- Effects & Callbacks ---
 
   useEffect(() => {
+    // const exitHandler = () => {
+    //   const isCurrentlyFullscreen = !!document.fullscreenElement;
+
+    //   if (isFullscreen && !isCurrentlyFullscreen) {
+    //     console.log("Exited fullscreen via native event (e.g., Esc key).");
+    //     setIsFullscreen(false);
+    //   } else if (!isFullscreen && isCurrentlyFullscreen) {
+    //     console.log("Entered fullscreen via native event.");
+    //     setIsFullscreen(true);
+    //   }
     const exitHandler = () => {
       const isCurrentlyFullscreen = !!document.fullscreenElement;
 
       if (isFullscreen && !isCurrentlyFullscreen) {
         console.log("Exited fullscreen via native event (e.g., Esc key).");
         setIsFullscreen(false);
+
+        // Unlock orientation when exiting fullscreen
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch (err) {
+          console.log("Screen orientation unlock failed");
+        }
       } else if (!isFullscreen && isCurrentlyFullscreen) {
         console.log("Entered fullscreen via native event.");
         setIsFullscreen(true);
+
+        // Lock to landscape when entering fullscreen
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock("landscape").catch((err) => {
+              console.log("Orientation lock failed:", err);
+            });
+          }
+        } catch (err) {
+          console.log("Screen orientation API not available");
+        }
       }
     };
 
@@ -122,7 +157,15 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
         videoId,
         width: "100%",
         height: "100%",
-        playerVars: { autoplay: 0, controls: 1, rel: 0, modestbranding: 1 },
+        playerVars: {
+          autoplay: 0,
+          controls: 1,
+          rel: 0,
+          modestbranding: 1,
+          origin: window.location.origin,
+          enablejsapi: 1,
+          widget_referrer: window.location.origin,
+        },
         events: {
           onReady: (event) => {
             console.log("Player ready");
@@ -135,7 +178,10 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
               const pendingId = pendingVideoIdRef.current;
               pendingVideoIdRef.current = null;
               console.log("Loading pending video:", pendingId);
-              event.target.cueVideoById(pendingId);
+              event.target.cueVideoById({
+                videoId: pendingId,
+                startSeconds: 0,
+              });
             }
           },
           onStateChange: (event) => {
@@ -228,14 +274,17 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     if (playerRef.current && isPlayerReady) {
       console.log("Changing video to:", videoId);
       try {
-        playerRef.current.cueVideoById(videoId);
+        // Use cueVideoById to show thumbnail without autoplay
+        playerRef.current.cueVideoById({
+          videoId: videoId,
+          startSeconds: 0,
+        });
+        setIsPlaying(false);
       } catch (error) {
         console.error("Error cueing video:", error);
-        // Store for later if player isn't ready
         pendingVideoIdRef.current = videoId;
       }
     } else {
-      // Store video ID to load when player becomes ready
       pendingVideoIdRef.current = videoId;
     }
   }, [videoId, isPlayerReady]);
@@ -371,8 +420,12 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
         case "changeVideo":
           if (videoId) {
             setVideoId(videoId);
+            // Immediately cue the video to show thumbnail
+            player.cueVideoById({
+              videoId: videoId,
+              startSeconds: 0,
+            });
           }
-          player.pauseVideo();
           setIsPlaying(false);
           break;
       }
@@ -468,11 +521,35 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     fetch(
       `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${newId}&format=json`
     )
+      // .then((res) => {
+      //   if (!res.ok) throw new Error("Invalid");
+
+      //   // Valid video → Apply it
+      //   setVideoId(newId);
+      //   socketRef.current?.emit("video-action", {
+      //     roomId,
+      //     action: "changeVideo",
+      //     videoId: newId,
+      //     time: 0,
+      //   });
+      //   setVideoUrlInput("");
+      //   setVideoError("");
+      // })
       .then((res) => {
         if (!res.ok) throw new Error("Invalid");
 
         // Valid video → Apply it
         setVideoId(newId);
+
+        // Immediately cue the video locally
+        if (playerRef.current && isPlayerReady) {
+          playerRef.current.cueVideoById({
+            videoId: newId,
+            startSeconds: 0,
+          });
+          setIsPlaying(false);
+        }
+
         socketRef.current?.emit("video-action", {
           roomId,
           action: "changeVideo",
@@ -563,6 +640,14 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
   const handleSeekMouseUp = (e) => {
     setIsSeeking(false);
     const seekTime = parseFloat(e.target.value);
+
+    // Immediately update local player
+    if (playerRef.current && isPlayerReady) {
+      playerRef.current.seekTo(seekTime, true);
+      setCurrentTime(seekTime);
+    }
+
+    // Then broadcast to others
     sendVideoAction("seek", seekTime);
     resetControlsTimer();
   };
@@ -572,16 +657,49 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     resetControlsTimer();
   };
 
-  const handleFullscreenToggle = (event) => {
+  // const handleFullscreenToggle = (event) => {
+  //   event.stopPropagation();
+  //   if (!videoContainerRef.current) return;
+
+  //   if (!document.fullscreenElement) {
+  //     requestFullscreen(videoContainerRef.current);
+  //     setIsFullscreen(true);
+  //   } else {
+  //     exitFullscreen();
+  //     setIsFullscreen(false);
+  //   }
+  // };
+
+  const handleFullscreenToggle = async (event) => {
     event.stopPropagation();
     if (!videoContainerRef.current) return;
 
     if (!document.fullscreenElement) {
       requestFullscreen(videoContainerRef.current);
       setIsFullscreen(true);
+
+      // Lock orientation to landscape on mobile devices
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock("landscape").catch((err) => {
+            console.log("Orientation lock not supported or failed:", err);
+          });
+        }
+      } catch (err) {
+        console.log("Screen orientation API not available");
+      }
     } else {
       exitFullscreen();
       setIsFullscreen(false);
+
+      // Unlock orientation when exiting fullscreen
+      try {
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      } catch (err) {
+        console.log("Screen orientation unlock failed");
+      }
     }
   };
 
@@ -965,7 +1083,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
             <div ref={chatEndRef} />
           </div>
 
-          <div className="mt-3 flex gap-2">
+          {/* <div className="mt-3 flex gap-2">
             <input
               type="text"
               placeholder="Type a message..."
@@ -979,6 +1097,25 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
             <button
               onClick={sendMessage}
               className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-semibold rounded-lg transition-colors"
+            >
+              Send
+            </button>
+          </div> */}
+
+          <div className="mt-3 flex gap-2 items-stretch">
+            <input
+              type="text"
+              placeholder="Type a message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
+              className="flex-1 p-2 sm:p-3 bg-gray-700 border border-gray-600 text-white outline-none rounded-lg focus:ring-cyan-400 focus:border-cyan-400 text-sm sm:text-base min-w-0"
+            />
+            <button
+              onClick={sendMessage}
+              className="px-3 sm:px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-semibold rounded-lg transition-colors text-sm sm:text-base whitespace-nowrap flex-shrink-0"
             >
               Send
             </button>
