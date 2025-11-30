@@ -39,7 +39,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://watch-together-beta.vercel.app"
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -47,7 +50,10 @@ const io = socketIo(server, {
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://watch-together-beta.vercel.app"
+    ],
     credentials: true,
   })
 );

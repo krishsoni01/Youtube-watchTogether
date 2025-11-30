@@ -15,7 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const YOUTUBE_API_SCRIPT_URL = "https://www.youtube.com/iframe_api";
-const SOCKET_SERVER_URL = "http://localhost:5000";
+const SOCKET_SERVER_URL = "https://youtube-watchtogether.onrender.com";
 const YT_DEFAULT_VIDEO_ID = "dQw4w9WgXcQ";
 
 const requestFullscreen = (element) => {
@@ -197,7 +197,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     const fetchHostName = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/rooms/${roomId}`
+          `https://youtube-watchtogether.onrender.com/api/rooms/${roomId}`
         );
         if (!response.ok) throw new Error("Failed to fetch room details");
         const data = await response.json();
@@ -258,7 +258,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     const fetchUsers = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/rooms/${roomId}/users`
+          `https://youtube-watchtogether.onrender.com/api/rooms/${roomId}/users`
         );
         if (!response.ok) throw new Error("Failed to fetch users");
         const data = await response.json();
@@ -601,7 +601,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rooms/${roomId}`,
+        `https://youtube-watchtogether.onrender.com/api/rooms/${roomId}`,
         {
           method: "DELETE",
           headers: {
