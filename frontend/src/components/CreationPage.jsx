@@ -10,6 +10,7 @@ import {
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { Settings, X, CornerUpLeft, LogOut } from "lucide-react";
+import { toast } from "react-toastify";
 
 // ===============================================
 // Utilities
@@ -55,6 +56,7 @@ const JoinRoomView = ({ onScreenChange, username }) => {
       );
       if (res.data) {
         // Room exists → join
+        toast.success("Room Joined!");
         navigate(`/room/${roomCode}`);
       }
     } catch (err) {
@@ -177,6 +179,7 @@ const HomeView = ({ onScreenChange, userId, username }) => {
 
   const copyCode = () => {
     navigator.clipboard.writeText(roomId);
+    toast.success("Room code copied, redirecting...");
     setCopied(true);
     setTimeout(() => {
       setCopied(false);

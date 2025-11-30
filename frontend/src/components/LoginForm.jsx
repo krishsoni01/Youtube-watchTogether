@@ -86,10 +86,6 @@ const LoginForm = () => {
             </span>
           </div>
 
-          <p className="text-sm text-right text-pink-400 hover:underline cursor-pointer">
-            Forgot password?
-          </p>
-
           <button
             type="submit"
             className="w-full py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition"
