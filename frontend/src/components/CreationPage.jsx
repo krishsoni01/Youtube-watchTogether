@@ -52,7 +52,7 @@ const JoinRoomView = ({ onScreenChange, username }) => {
     try {
       // Check if room exists in DB
       const res = await axios.get(
-        `http://localhost:5000/api/rooms/${roomCode}`
+        `https://youtube-watchtogether.onrender.com/api/rooms/${roomCode}`
       );
       if (res.data) {
         // Room exists → join
@@ -164,7 +164,7 @@ const HomeView = ({ onScreenChange, userId, username }) => {
 
     try {
       // Save room in MongoDB
-      await axios.post("http://localhost:5000/api/rooms", {
+      await axios.post("https://youtube-watchtogether.onrender.com/api/rooms", {
         roomCode: newRoomId,
         hostName: username,
         users: [username],
