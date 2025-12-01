@@ -21,7 +21,7 @@ const LoginForm = () => {
 
     if (!email || !password) {
       setMessage("Email and password are required");
-      if (navigator.vibrate) navigator.vibrate(150);
+      if (navigator.vibrate) navigator.vibrate(200);
       return;
     }
 
@@ -96,13 +96,17 @@ const LoginForm = () => {
 
           <button
             type="submit"
+            onClick={() => navigator.vibrate && navigator.vibrate(40)}
             className="w-full py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition"
           >
             Login
           </button>
         </form>
 
-        <p className="text-sm text-center mt-4 text-gray-400">
+        <p
+          onClick={() => navigator.vibrate && navigator.vibrate(40)}
+          className="text-sm text-center mt-4 text-gray-400"
+        >
           Don’t have an account?{" "}
           <Link
             to="/register"
