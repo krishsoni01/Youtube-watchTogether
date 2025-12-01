@@ -15,7 +15,30 @@ const PrivateRoute = ({ children }) => {
 function App() {
   return (
     <>
-      <ToastContainer position="top-right" autoClose={2500} />
+      <ToastContainer
+        position="top-center"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        // theme="dark"
+        style={{
+          top: "10px",
+          zIndex: 9999,
+        }}
+        toastStyle={{
+          fontFamily: "'Poppins', sans-serif",
+          fontSize: "14px",
+          padding: "12px",
+          borderRadius: "8px",
+          maxWidth: "90vw",
+          margin: "0 auto",
+        }}
+      />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />

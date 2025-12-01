@@ -205,7 +205,10 @@ const HomeView = ({ onScreenChange, userId, username }) => {
           <Settings
             size={24}
             className="text-gray-400 cursor-pointer hover:text-pink-400 transition"
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => {
+              setShowSettings(!showSettings);
+              if (navigator.vibrate) navigator.vibrate(40);
+            }}
           />
 
           {/* Dropdown menu */}
