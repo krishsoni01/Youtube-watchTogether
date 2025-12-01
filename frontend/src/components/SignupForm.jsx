@@ -23,6 +23,10 @@ const SignupForm = () => {
 
     if (formData.password !== formData.confirmPassword) {
       setMessage("Passwords do not match!");
+      // 🔔 Vibrate on error (mobile only)
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+      }
       return;
     }
 
@@ -47,6 +51,10 @@ const SignupForm = () => {
       navigate("/");
     } catch (err) {
       console.error("Signup error:", err.response || err);
+      // 🔔 Vibrate on error (mobile only)
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+      }
       setMessage(err.response?.data?.message || "Error occurred");
     }
   };
@@ -128,13 +136,17 @@ const SignupForm = () => {
 
           <button
             type="submit"
+            onClick={() => navigator.vibrate && navigator.vibrate(40)}
             className="w-full py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition"
           >
             Signup
           </button>
         </form>
 
-        <p className="text-sm text-center mt-4 text-gray-400">
+        <p
+          onClick={() => navigator.vibrate && navigator.vibrate(40)}
+          className="text-sm text-center mt-4 text-gray-400"
+        >
           Already have an account?{" "}
           <Link
             to="/login"
@@ -153,4 +165,3 @@ const SignupForm = () => {
 };
 
 export default SignupForm;
-
