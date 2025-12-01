@@ -77,11 +77,41 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
   const pendingVideoIdRef = useRef(null); // NEW: Track pending video changes
   // Add this with your other refs
   const previousVideoIdRef = useRef(videoId);
+  const messageAudioRef = useRef(null);
+
+  //initialize the audio element
+  useEffect(() => {
+    messageAudioRef.current = new Audio("/sounds/tone.wav");
+    messageAudioRef.current.volume = 0.5; // Adjust volume (0.0 to 1.0)
+
+    return () => {
+      if (messageAudioRef.current) {
+        messageAudioRef.current.pause();
+        messageAudioRef.current = null;
+      }
+    };
+  }, []);
 
   // 🔥 FIX: Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const playMessageSound = () => {
+    try {
+      if (messageAudioRef.current) {
+        messageAudioRef.current.currentTime = 0; // Reset to start
+        messageAudioRef.current.play().catch((err) => {
+          console.log("Audio play failed:", err);
+        });
+      }
+      if (navigator.vibrate) {
+        navigator.vibrate(30); // 30ms vibration
+      }
+    } catch (error) {
+      console.log("Error playing message sound:", error);
+    }
+  };
 
   // --- Effects & Callbacks ---
 
@@ -422,6 +452,11 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     });
 
     socket.on("chat-message", (msg) => {
+      // Only play sound if message is NOT from current user
+      if (msg.username !== localUsername && msg.username !== "System") {
+        playMessageSound(); // 🔊 Play notification sound
+      }
+
       if (msg.username !== localUsername || msg.username === "System") {
         setMessages((prev) => [
           ...prev,
@@ -644,19 +679,6 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     resetControlsTimer();
   };
 
-  // const handleFullscreenToggle = (event) => {
-  //   event.stopPropagation();
-  //   if (!videoContainerRef.current) return;
-
-  //   if (!document.fullscreenElement) {
-  //     requestFullscreen(videoContainerRef.current);
-  //     setIsFullscreen(true);
-  //   } else {
-  //     exitFullscreen();
-  //     setIsFullscreen(false);
-  //   }
-  // };
-
   const handleFullscreenToggle = async (event) => {
     event.stopPropagation();
     if (!videoContainerRef.current) return;
@@ -749,9 +771,6 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     playerRef,
     sendVideoAction,
   }) => {
-    // if (isFullscreen) {
-    //   return null;
-    // }
     // Hide custom controls on mobile screens (below 768px)
     const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
 
@@ -889,6 +908,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
                   onClick={() => {
                     navigator.clipboard.writeText(roomId);
                     toast.success("Room code copied!");
+                    if (navigator.vibrate) navigator.vibrate(40);
                   }}
                   className="text-white hover:text-cyan-400 transition"
                   title="Copy Room Code"
@@ -899,7 +919,10 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
             </h1>
 
             <button
-              onClick={() => setIsHeaderCollapsed(!isHeaderCollapsed)}
+              onClick={() => {
+                setIsHeaderCollapsed(!isHeaderCollapsed);
+                if (navigator.vibrate) navigator.vibrate(40);
+              }}
               className="sm:hidden ml-4 p-2 rounded-md bg-gray-700 hover:bg-gray-600 transition text-white"
             >
               {isHeaderCollapsed ? (
@@ -928,7 +951,10 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
                   className="p-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none w-full sm:w-72"
                 />
                 <button
-                  onClick={handleVideoChange}
+                  onClick={() => {
+                    handleVideoChange();
+                    if (navigator.vibrate) navigator.vibrate(40);
+                  }}
                   className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-semibold rounded-lg transition shadow-md w-full sm:w-auto"
                 >
                   Load Video
@@ -937,7 +963,10 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
 
               {localUsername !== hostName && (
                 <button
-                  onClick={handleLeaveRoom}
+                  onClick={() => {
+                    handleLeaveRoom();
+                    if (navigator.vibrate) navigator.vibrate(40);
+                  }}
                   className="px-4 py-2 mt-2 lg:mt-0 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition shadow-md w-full sm:w-auto"
                 >
                   <LogOut className="inline mr-2" size={18} />
@@ -947,7 +976,10 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
 
               {localUsername === hostName && (
                 <button
-                  onClick={handleDeleteRoom}
+                  onClick={() => {
+                    handleDeleteRoom();
+                    if (navigator.vibrate) navigator.vibrate(40);
+                  }}
                   className="px-4 py-2 mt-2 lg:mt-0 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition shadow-md w-full sm:w-auto flex items-center justify-center gap-2"
                 >
                   <LogOut className="inline mr-2" size={18} />
@@ -1007,7 +1039,10 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
             <div className="font-bold text-lg">Room Chat</div>
 
             <button
-              onClick={() => setShowUsers(!showUsers)}
+              onClick={() => {
+                setShowUsers(!showUsers);
+                if (navigator.vibrate) navigator.vibrate(40);
+              }}
               className="flex items-center gap-1 px-3 py-1 text-sm rounded-lg bg-gray-700 hover:bg-gray-600 transition"
             >
               {showUsers ? "Hide Users" : "Show Users"}
@@ -1086,25 +1121,6 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
             <div ref={chatEndRef} />
           </div>
 
-          {/* <div className="mt-3 flex gap-2">
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
-              }}
-              className="flex-1 p-3 bg-gray-700 border border-gray-600 text-white outline-none rounded-lg focus:ring-cyan-400 focus:border-cyan-400"
-            />
-            <button
-              onClick={sendMessage}
-              className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-semibold rounded-lg transition-colors"
-            >
-              Send
-            </button>
-          </div> */}
-
           <div className="mt-3 flex gap-2 items-stretch">
             <input
               type="text"
@@ -1117,7 +1133,10 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
               className="flex-1 p-2 sm:p-3 bg-gray-700 border border-gray-600 text-white outline-none rounded-lg focus:ring-cyan-400 focus:border-cyan-400 text-sm sm:text-base min-w-0"
             />
             <button
-              onClick={sendMessage}
+              onClick={() => {
+                sendMessage();
+                if (navigator.vibrate) navigator.vibrate(40);
+              }}
               className="px-3 sm:px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-semibold rounded-lg transition-colors text-sm sm:text-base whitespace-nowrap flex-shrink-0"
             >
               Send
