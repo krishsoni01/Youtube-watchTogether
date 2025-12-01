@@ -25,16 +25,23 @@ const LoginForm = () => {
     }
 
     try {
-      const res = await axios.post("https://youtube-watchtogether.onrender.com/api/auth/login", {
-        email,
-        password,
-      });
+      const res = await axios.post(
+        "https://youtube-watchtogether.onrender.com/api/auth/login",
+        {
+          email,
+          password,
+        }
+      );
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.username);
       navigate("/");
     } catch (err) {
       console.error("Login error:", err.response || err);
+      // 🔔 Vibrate on error (mobile only)
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
       setMessage(err.response?.data?.message || "Login failed");
     }
   };
