@@ -23,7 +23,7 @@ const initialAuthToken =
 const getGreeting = () => {
   const hour = new Date().getHours();
   if (hour < 12) return "Good Morning";
-  if (hour < 18) return "Good Afternoon";
+  if (hour < 17) return "Good Afternoon";
   return "Good Evening";
 };
 
@@ -89,7 +89,10 @@ const JoinRoomView = ({ onScreenChange, username }) => {
       {/* Header */}
       <header className="sticky top-0 w-full flex items-center gap-2 pt-6 pb-4 px-6 bg-black text-white border-b border-gray-600">
         <button
-          onClick={() => onScreenChange("home")}
+          onClick={() => {
+            onScreenChange("home");
+            if (navigator.vibrate) navigator.vibrate(40);
+          }}
           className="flex items-center gap-2 text-gray-400 hover:text-pink-400 transition"
         >
           <CornerUpLeft size={20} />
@@ -130,7 +133,10 @@ const JoinRoomView = ({ onScreenChange, username }) => {
         )}
 
         <button
-          onClick={handleJoin}
+          onClick={()=>{
+            handleJoin();
+            if (navigator.vibrate) navigator.vibrate(40);
+          }}
           disabled={roomCode.length !== 6 || loading}
           className="w-full mt-4 py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition disabled:opacity-50"
         >
@@ -206,7 +212,10 @@ const HomeView = ({ onScreenChange, userId, username }) => {
           {showSettings && (
             <div className="absolute right-0 mt-2 w-40 bg-gray-900 rounded-lg shadow-lg border border-gray-700">
               <button
-                onClick={handleLogout}
+                onClick={() => {
+                  handleLogout();
+                  if (navigator.vibrate) navigator.vibrate(40);
+                }}
                 className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-pink-400 rounded-lg transition"
               >
                 <LogOut size={16} />
@@ -238,14 +247,20 @@ const HomeView = ({ onScreenChange, userId, username }) => {
       {/* Actions */}
       <div className="w-full flex space-x-2 mt-10 px-6">
         <button
-          onClick={handleCreateRoom}
+          onClick={() => {
+            handleCreateRoom();
+            if (navigator.vibrate) navigator.vibrate(40);
+          }}
           disabled={!userId}
           className="flex-1 py-3 rounded-lg font-semibold bg-white text-black hover:bg-gray-200"
         >
           New room
         </button>
         <button
-          onClick={() => onScreenChange("join")}
+          onClick={() => {
+            onScreenChange("join");
+            if (navigator.vibrate) navigator.vibrate(40);
+          }}
           disabled={!userId}
           className="flex-1 py-3 rounded-lg font-semibold text-white bg-gray-800 hover:bg-gray-700"
         >
@@ -274,7 +289,10 @@ const HomeView = ({ onScreenChange, userId, username }) => {
             </p>
             <div className="flex space-x-2 justify-center">
               <button
-                onClick={copyCode}
+                onClick={()=>{
+                  copyCode();
+                  if (navigator.vibrate) navigator.vibrate(40);
+                }}
                 disabled={copied}
                 className={`px-4 py-2 rounded-lg text-white font-semibold transition ${
                   copied
@@ -288,6 +306,7 @@ const HomeView = ({ onScreenChange, userId, username }) => {
                 onClick={() => {
                   setShowPopup(false);
                   navigate(`/room/${roomId}`);
+                  if (navigator.vibrate) navigator.vibrate(40);
                 }}
                 className="px-4 py-2 bg-pink-600 hover:bg-pink-500 rounded-lg text-white font-semibold"
               >
