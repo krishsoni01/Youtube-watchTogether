@@ -21,6 +21,7 @@ const LoginForm = () => {
 
     if (!email || !password) {
       setMessage("Email and password are required");
+      if (navigator.vibrate) navigator.vibrate(150);
       return;
     }
 
@@ -40,7 +41,7 @@ const LoginForm = () => {
       console.error("Login error:", err.response || err);
       // 🔔 Vibrate on error (mobile only)
       if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200]);
+        navigator.vibrate(200);
       }
       setMessage(err.response?.data?.message || "Login failed");
     }
