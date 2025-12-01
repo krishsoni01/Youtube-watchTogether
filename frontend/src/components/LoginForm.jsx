@@ -88,7 +88,10 @@ const LoginForm = () => {
             />
             <span
               className="absolute right-3 top-3 cursor-pointer text-gray-400 hover:text-pink-400"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => {
+                setShowPassword(!showPassword);
+                if (navigator.vibrate) navigator.vibrate(40);
+              }}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </span>
