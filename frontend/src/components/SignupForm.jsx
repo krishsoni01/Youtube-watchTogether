@@ -14,6 +14,7 @@ const SignupForm = () => {
   });
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,6 +30,9 @@ const SignupForm = () => {
       }
       return;
     }
+
+    setLoading(true); // ADD THIS
+    setMessage(""); // ADD THIS
 
     try {
       const res = await axios.post(
@@ -56,6 +60,8 @@ const SignupForm = () => {
         navigator.vibrate(200);
       }
       setMessage(err.response?.data?.message || "Error occurred");
+    } finally {
+      setLoading(false); // ADD THIS
     }
   };
 
@@ -139,10 +145,33 @@ const SignupForm = () => {
 
           <button
             type="submit"
+            disabled={loading}
             onClick={() => navigator.vibrate && navigator.vibrate(40)}
-            className="w-full py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition"
+            className="w-full py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            Signup
+            {loading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Signing up...
+              </>
+            ) : (
+              "Signup"
+            )}
           </button>
         </form>
 
