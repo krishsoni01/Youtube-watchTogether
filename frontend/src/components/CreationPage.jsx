@@ -133,7 +133,7 @@ const JoinRoomView = ({ onScreenChange, username }) => {
         )}
 
         <button
-          onClick={()=>{
+          onClick={() => {
             handleJoin();
             if (navigator.vibrate) navigator.vibrate(40);
           }}
@@ -156,6 +156,7 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [roomId, setRoomId] = useState(null);
   const [copied, setCopied] = useState(false); // <-- track copy state
+  const [creatingRoom, setCreatingRoom] = useState(false);
   const navigate = useNavigate();
   const greeting = getGreeting();
 
@@ -166,6 +167,7 @@ const HomeView = ({ onScreenChange, userId, username }) => {
 
   const handleCreateRoom = useCallback(async () => {
     if (!userId) return;
+    setCreatingRoom(true);
     const newRoomId = generateRoomId();
 
     try {
@@ -180,6 +182,8 @@ const HomeView = ({ onScreenChange, userId, username }) => {
       setShowPopup(true);
     } catch (error) {
       console.error("Error creating room:", error);
+    } finally {
+      setCreatingRoom(false); // ADD THIS
     }
   }, [userId, username]);
 
@@ -254,10 +258,32 @@ const HomeView = ({ onScreenChange, userId, username }) => {
             handleCreateRoom();
             if (navigator.vibrate) navigator.vibrate(40);
           }}
-          disabled={!userId}
-          className="flex-1 py-3 rounded-lg font-semibold bg-white text-black hover:bg-gray-200"
+          disabled={!userId || creatingRoom}
+          className="flex-1 py-3 rounded-lg font-semibold bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          New room
+          {creatingRoom ? (
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              Creating...
+            </>
+          ) : (
+            "New room"
+          )}
         </button>
         <button
           onClick={() => {
@@ -292,7 +318,7 @@ const HomeView = ({ onScreenChange, userId, username }) => {
             </p>
             <div className="flex space-x-2 justify-center">
               <button
-                onClick={()=>{
+                onClick={() => {
                   copyCode();
                   if (navigator.vibrate) navigator.vibrate(40);
                 }}
