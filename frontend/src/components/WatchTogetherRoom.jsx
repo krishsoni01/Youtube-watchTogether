@@ -17,7 +17,8 @@ import { toast } from "react-toastify";
 
 const YOUTUBE_API_SCRIPT_URL = "https://www.youtube.com/iframe_api";
 const SOCKET_SERVER_URL = "https://youtube-watchtogether.onrender.com";
-const YT_DEFAULT_VIDEO_ID = "dQw4w9WgXcQ";
+// const YT_DEFAULT_VIDEO_ID = "dQw4w9WgXcQ";
+const YT_DEFAULT_VIDEO_ID = "cNGjD0VG4R8";
 
 const requestFullscreen = (element) => {
   if (element.requestFullscreen) element.requestFullscreen();
