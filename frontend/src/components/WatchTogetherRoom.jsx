@@ -17,7 +17,6 @@ import { toast } from "react-toastify";
 
 const YOUTUBE_API_SCRIPT_URL = "https://www.youtube.com/iframe_api";
 const SOCKET_SERVER_URL = "https://youtube-watchtogether.onrender.com";
-// const YT_DEFAULT_VIDEO_ID = "dQw4w9WgXcQ";
 const YT_DEFAULT_VIDEO_ID = "cNGjD0VG4R8";
 
 const requestFullscreen = (element) => {
@@ -399,10 +398,13 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
       } else {
         setTimeout(syncPlayer, 1500);
       }
-
+      // Update users list
       if (data?.users) {
-        setUsers(data.users);
-        data.users.forEach((u) => previousUserIdsRef.current.add(u.id));
+        const uniqueUsers = data.users.filter((user, index, self) => {
+          index === self.findIndex((u) => u.id === user.id);
+        });
+        setUsers(uniqueUsers);
+        uniqueUsers.forEach((u) => previousUserIdsRef.current.add(u.id));
       }
     });
 
@@ -467,7 +469,10 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     });
 
     socket.on("userList", (userArray) => {
-      setUsers(userArray);
+      const uniqueUsers = userArray.filter(
+        (user, index, self) => index === self.findIndex((u) => u.id === user.id)
+      );
+      setUsers(uniqueUsers);
     });
 
     socket.on("roomDeleted", (data) => {
@@ -544,20 +549,6 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
     fetch(
       `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${newId}&format=json`
     )
-      // .then((res) => {
-      //   if (!res.ok) throw new Error("Invalid");
-
-      //   // Valid video → Apply it
-      //   setVideoId(newId);
-      //   socketRef.current?.emit("video-action", {
-      //     roomId,
-      //     action: "changeVideo",
-      //     videoId: newId,
-      //     time: 0,
-      //   });
-      //   setVideoUrlInput("");
-      //   setVideoError("");
-      // })
       .then((res) => {
         if (!res.ok) throw new Error("Invalid");
 
