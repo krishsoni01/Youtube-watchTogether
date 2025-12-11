@@ -74,8 +74,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
   const controlsHideTimeoutRef = useRef(null);
   const isRemoteActionRef = useRef(false);
   const previousUserIdsRef = useRef(new Set());
-  const pendingVideoIdRef = useRef(null); // NEW: Track pending video changes
-  // Add this with your other refs
+  const pendingVideoIdRef = useRef(null); 
   const previousVideoIdRef = useRef(videoId);
   const messageAudioRef = useRef(null);
 
