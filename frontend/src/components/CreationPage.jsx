@@ -157,7 +157,6 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const [roomId, setRoomId] = useState(null);
   const [copied, setCopied] = useState(false); // <-- track copy state
   const [creatingRoom, setCreatingRoom] = useState(false);
-  const [showServerMessage, setShowServerMessage] = useState(false);
   const navigate = useNavigate();
   const greeting = getGreeting();
 
@@ -169,13 +168,7 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const handleCreateRoom = useCallback(async () => {
     if (!userId) return;
     setCreatingRoom(true);
-    setShowServerMessage(false);
     const newRoomId = generateRoomId();
-
-    // Show server message after 5 seconds
-    const timer = setTimeout(() => {
-      setShowServerMessage(true);
-    }, 5000);
 
     try {
       // Save room in MongoDB
@@ -269,32 +262,25 @@ const HomeView = ({ onScreenChange, userId, username }) => {
           className="flex-1 py-3 rounded-lg font-semibold bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {creatingRoom ? (
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Creating...
-              </div>
-              {showServerMessage && (
-                <span className="text-xs text-gray-400">
-                  Server is starting, please wait...
-                </span>
-              )}
-            </div>
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              Creating...
+            </>
           ) : (
             "New room"
           )}
