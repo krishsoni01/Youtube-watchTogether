@@ -51,9 +51,21 @@ const SignupController = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: true, // for production (HTTPS)
+      sameSite: "none", // for cross-origin
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    res.cookie("username", newUser.username, {
+      httpOnly: false, // if you need client-side access
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(201).json({
       message: "User created successfully",
-      token,
       username: newUser.username,
     });
   } catch (err) {
@@ -88,9 +100,22 @@ const LoginController = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: true, // for production (HTTPS)
+      sameSite: "none", // for cross-origin
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    res.cookie("username", user.username, {
+      httpOnly: false, // if you need client-side access
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res
       .status(200)
-      .json({ message: "Login successful", token, username: user.username });
+      .json({ message: "Login successful", username: user.username });
   } catch (err) {
     console.error("Login error:", err.message);
     res.status(500).json({ message: "Internal server error" });
@@ -112,10 +137,19 @@ const googleAuthCallback = async (req, res) => {
         { expiresIn: "7d" }
       );
 
-      res.cookie("token", token);
-      res.cookie("username", isUserExists.username);
+      res.cookie("token", token, {
+        httpOnly: false,
+        secure: true, // for production (HTTPS)
+        sameSite: "none", // for cross-origin
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+      res.cookie("username", isUserExists.username, {
+        httpOnly: false, // if you need client-side access
+        secure: true,
+        sameSite: "none",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
       return res.redirect("https://watch-together-beta.vercel.app/");
-      // return res.redirect("http://localhost:5173");
     }
 
     const username = generateUsername(user);
@@ -134,10 +168,19 @@ const googleAuthCallback = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token);
-    res.cookie("username", newUser.username);
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: true, // for production (HTTPS)
+      sameSite: "none", // for cross-origin
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    res.cookie("username", newUser.username, {
+      httpOnly: false, // if you need client-side access
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     res.redirect("https://watch-together-beta.vercel.app/");
-    // res.redirect("http://localhost:5173");
   } catch (error) {
     console.error("Google auth error:", error);
     res.status(500).json({ message: "Server error" });
