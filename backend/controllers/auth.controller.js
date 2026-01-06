@@ -14,7 +14,7 @@ const SignupController = async (req, res) => {
     let { username, email, password } = req.body;
 
     // Trim & normalize
-    username = username?.trimtrue
+    username = username?.trim();
     email = email?.trim().toLowerCase();
     password = password?.trim();
 
