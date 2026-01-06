@@ -47,6 +47,7 @@ const SignupForm = () => {
           headers: {
             "Content-Type": "application/json",
           },
+          withCredentials: true,
         }
       );
 
@@ -67,8 +68,8 @@ const SignupForm = () => {
   const handleGoogleLogin = () => {
     if (navigator.vibrate) navigator.vibrate(40);
     setGoogleLoading(true);
-    // window.location.href = "http://localhost:5000/api/auth/google";
-    window.location.href = "https://youtube-watchtogether.onrender.com/api/auth/google";
+    window.location.href =
+      "https://youtube-watchtogether.onrender.com/api/auth/google";
   };
 
   return (

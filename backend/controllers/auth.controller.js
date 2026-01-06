@@ -14,7 +14,7 @@ const SignupController = async (req, res) => {
     let { username, email, password } = req.body;
 
     // Trim & normalize
-    username = username?.trim();
+    username = username?.trimtrue
     email = email?.trim().toLowerCase();
     password = password?.trim();
 
@@ -52,7 +52,7 @@ const SignupController = async (req, res) => {
     );
 
     res.cookie("token", token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: true, // for production (HTTPS)
       sameSite: "none", // for cross-origin
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -101,7 +101,7 @@ const LoginController = async (req, res) => {
     );
 
     res.cookie("token", token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: true, // for production (HTTPS)
       sameSite: "none", // for cross-origin
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -138,7 +138,7 @@ const googleAuthCallback = async (req, res) => {
       );
 
       res.cookie("token", token, {
-        httpOnly: false,
+        httpOnly: true,
         secure: true, // for production (HTTPS)
         sameSite: "none", // for cross-origin
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -169,7 +169,7 @@ const googleAuthCallback = async (req, res) => {
     );
 
     res.cookie("token", token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: true, // for production (HTTPS)
       sameSite: "none", // for cross-origin
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
