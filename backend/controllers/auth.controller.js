@@ -203,9 +203,34 @@ const verifyTokenController = (req, res) => {
   }
 };
 
+const clearCookies = (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    });
+
+    res.clearCookie("username", {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    });
+
+    // IMPORTANT: Send a response
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Logout failed" });
+  }
+};
+
 module.exports = {
   SignupController,
   LoginController,
   googleAuthCallback,
   verifyTokenController,
+  clearCookies,
 };

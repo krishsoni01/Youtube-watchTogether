@@ -1,4 +1,4 @@
-import { useState , useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import CreationPage from "./components/CreationPage";
 import WatchTogetherRoom from "./components/WatchTogetherRoom";
@@ -14,11 +14,16 @@ const PrivateRoute = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        const authStatus = searchParams.get("auth");
+        if (authStatus === "success") {
+          // Wait a bit for cookies to be set
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
         const response = await fetch(
           "https://youtube-watchtogether.onrender.com/api/verify-auth",
           {
             method: "GET",
-            credentials: "include", 
+            credentials: "include",
           }
         );
         setIsAuthenticated(response.ok);

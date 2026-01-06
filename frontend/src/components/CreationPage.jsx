@@ -161,10 +161,17 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const navigate = useNavigate();
   const greeting = getGreeting();
 
-  const handleLogout = () => {
-    Cookies.remove("token") // 👈 remove all credentials
-    Cookies.remove("username") // 👈 remove all credentials
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await axios.get("https://youtube-watchtogether.onrender.com/api/logout", {
+        withCredentials: true,
+      });
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      navigate("/login");
+    }
   };
 
   const handleCreateRoom = useCallback(async () => {
