@@ -12,7 +12,7 @@ const setupSocketHandlers = require("./utils/socket");
 const connectDB = require("./db/db");
 const passport = require("passport");
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
-import cookieParser from "cookie-parser";
+const cookieParser = require("cookie-parser");
 
 // Try loading auth routes safely
 let authRoutes;
