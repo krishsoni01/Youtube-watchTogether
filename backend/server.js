@@ -13,6 +13,7 @@ const connectDB = require("./db/db");
 const passport = require("passport");
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
 const cookieParser = require("cookie-parser");
+const { verifyTokenController } = require("./controllers/auth.controller");
 
 // Try loading auth routes safely
 let authRoutes;
@@ -74,7 +75,8 @@ passport.use(
 app.get("/", (req, res) => {
   res.send("Watch Together Server is Running");
 });
-
+// Create a verification endpoint
+app.get("/api/verify-auth", verifyTokenController);
 // AUTH ROUTES
 if (authRoutes) {
   app.use("/api/auth", authRoutes);

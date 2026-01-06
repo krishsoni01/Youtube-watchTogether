@@ -187,8 +187,25 @@ const googleAuthCallback = async (req, res) => {
   }
 };
 
+const verifyTokenController = (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ authenticated: false });
+  }
+
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    res.status(200).json({ authenticated: true, user: decoded });
+  } catch (error) {
+    res.status(401).json({ authenticated: false });
+  }
+};
+
 module.exports = {
   SignupController,
   LoginController,
   googleAuthCallback,
+  verifyTokenController,
 };

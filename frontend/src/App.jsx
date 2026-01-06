@@ -5,12 +5,34 @@ import LoginPage from "./components/LoginForm"; // <-- assume you have login
 import RegisterPage from "./components/SignupForm"; // <-- assume register
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Cookies from 'js-cookie';
 
 // --- PRIVATE ROUTE WRAPPER ---
 const PrivateRoute = ({ children }) => {
-  const token = Cookies.get("token"); // or read from cookies
-  return token ? children : <Navigate to="/login" replace />;
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch(
+          "https://youtube-watchtogether.onrender.com/api/verify-auth",
+          {
+            method: "GET",
+            credentials: "include", 
+          }
+        );
+        setIsAuthenticated(response.ok);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>; // or a spinner
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 function App() {
