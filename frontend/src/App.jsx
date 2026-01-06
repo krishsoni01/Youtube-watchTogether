@@ -5,10 +5,11 @@ import LoginPage from "./components/LoginForm"; // <-- assume you have login
 import RegisterPage from "./components/SignupForm"; // <-- assume register
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Cookies from 'js-cookie';
 
 // --- PRIVATE ROUTE WRAPPER ---
 const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem("token"); // or read from cookies
+  const token = Cookies.get("token"); // or read from cookies
   return token ? children : <Navigate to="/login" replace />;
 };
 

@@ -11,6 +11,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { Settings, X, CornerUpLeft, LogOut } from "lucide-react";
 import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 // ===============================================
 // Utilities
@@ -161,7 +162,8 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const greeting = getGreeting();
 
   const handleLogout = () => {
-    localStorage.clear(); // 👈 remove all credentials
+    Cookies.remove("token") // 👈 remove all credentials
+    Cookies.remove("username") // 👈 remove all credentials
     navigate("/login");
   };
 
@@ -360,7 +362,7 @@ const CreationPage = () => {
   const [username, setUsername] = useState(null);
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
+    const storedUsername = Cookies.get("username");
     if (storedUsername) {
       setUsername(storedUsername);
     }

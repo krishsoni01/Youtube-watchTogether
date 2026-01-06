@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const generateUsername = require("../utils/generateUsername");
 
 // --- HELPER FUNCTIONS ---
 function isValidEmail(email) {
@@ -108,22 +109,21 @@ const googleAuthCallback = async (req, res) => {
       const token = jwt.sign(
         { id: isUserExists._id, username: isUserExists.username },
         process.env.JWT_SECRET,
-        { expiresIn: "2d" }
+        { expiresIn: "7d" }
       );
+
       res.cookie("token", token);
-      return res.status(200).json({
-        message: "User logged in successfully",
-        user: {
-          username: isUserExists.username,
-          token: token,
-        },
-      });
+      res.cookie("username", isUserExists.username);
+      // return res.redirect("https://watch-together-beta.vercel.app/");
+      return res.redirect("http://localhost:5173");
     }
+
+    const username = generateUsername(user);
 
     const newUser = new User({
       googleId: user.id,
       email: user.emails[0].value,
-      username: user.name.givenName,
+      username: username,
     });
 
     await newUser.save();
@@ -131,17 +131,13 @@ const googleAuthCallback = async (req, res) => {
     const token = jwt.sign(
       { id: newUser._id, username: newUser.username },
       process.env.JWT_SECRET,
-      { expiresIn: "2d" }
+      { expiresIn: "7d" }
     );
 
     res.cookie("token", token);
-    res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        username: newUser.username,
-        token: token,
-      },
-    });
+    res.cookie("username", newUser.username);
+    // res.redirect("https://watch-together-beta.vercel.app/");
+    res.redirect("http://localhost:5173");
   } catch (error) {
     console.error("Google auth error:", error);
     res.status(500).json({ message: "Server error" });

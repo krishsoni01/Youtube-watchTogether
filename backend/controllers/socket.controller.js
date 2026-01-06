@@ -3,8 +3,8 @@ const Message = require("../models/message");
 
 const normalizeRoomId = (id) => (id ? id.toUpperCase() : null);
 
-const joinRoomController = async (data) => {
-  let roomIdentifier = normalizeRoomId(data.roomId || roomId);
+const joinRoomController = (socket, io) => async (data) => {
+  let roomIdentifier = normalizeRoomId(data.roomId);
   if (!roomIdentifier) {
     socket.emit("roomError", "No room ID provided.");
     return socket.disconnect(true);
@@ -103,7 +103,7 @@ const joinRoomController = async (data) => {
   }
 };
 
-const videoActionController = async ({
+const videoActionController = (socket, io) => async ({
   roomId: roomIdentifier,
   action,
   time,
@@ -158,7 +158,7 @@ const videoActionController = async ({
   }
 };
 
-const chatMessageController = async ({ roomId: roomIdentifier, message }) => {
+const chatMessageController = (socket, io) => async ({ roomId: roomIdentifier, message }) => {
   if (!roomIdentifier) return;
   const normalizedId = normalizeRoomId(roomIdentifier);
   const username = socket.data.username || "Anon";
@@ -195,7 +195,7 @@ const chatMessageController = async ({ roomId: roomIdentifier, message }) => {
   }
 };
 
-const disconnectingController = async () => {
+const disconnectingController = (socket, io) => async () => {
   console.log(`🔌 User disconnecting: ${socket.id} (${socket.data.username})`);
 
   await new Promise((resolve) => setTimeout(resolve, 50));
