@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState , useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import CreationPage from "./components/CreationPage";
 import WatchTogetherRoom from "./components/WatchTogetherRoom";
