@@ -57,9 +57,8 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
-      // process.env.GOOGLE_CALLBACK_URL ||
       callbackURL:
-         "/api/auth/google/callback",
+        process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback",
     },
     (accessToken, refreshToken, profile, done) => {
       // Here, you would typically find or create a user in your database

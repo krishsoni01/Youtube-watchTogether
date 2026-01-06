@@ -114,8 +114,8 @@ const googleAuthCallback = async (req, res) => {
 
       res.cookie("token", token);
       res.cookie("username", isUserExists.username);
-      // return res.redirect("https://watch-together-beta.vercel.app/");
-      return res.redirect("http://localhost:5173");
+      return res.redirect("https://watch-together-beta.vercel.app/");
+      // return res.redirect("http://localhost:5173");
     }
 
     const username = generateUsername(user);
@@ -136,8 +136,8 @@ const googleAuthCallback = async (req, res) => {
 
     res.cookie("token", token);
     res.cookie("username", newUser.username);
-    // res.redirect("https://watch-together-beta.vercel.app/");
-    res.redirect("http://localhost:5173");
+    res.redirect("https://watch-together-beta.vercel.app/");
+    // res.redirect("http://localhost:5173");
   } catch (error) {
     console.error("Google auth error:", error);
     res.status(500).json({ message: "Server error" });
