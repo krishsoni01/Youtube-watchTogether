@@ -37,8 +37,16 @@ const LoginForm = () => {
           email,
           password,
         },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
+
+      // Wait a bit for cookies to be set
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       navigate("/");
     } catch (err) {
@@ -56,7 +64,8 @@ const LoginForm = () => {
   const handleGoogleLogin = () => {
     if (navigator.vibrate) navigator.vibrate(40);
     setGoogleLoading(true);
-    window.location.href = "https://youtube-watchtogether.onrender.com/api/auth/google";
+    window.location.href =
+      "https://youtube-watchtogether.onrender.com/api/auth/google";
   };
 
   return (

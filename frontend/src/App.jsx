@@ -1,41 +1,84 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import CreationPage from "./components/CreationPage";
 import WatchTogetherRoom from "./components/WatchTogetherRoom";
-import LoginPage from "./components/LoginForm"; // <-- assume you have login
-import RegisterPage from "./components/SignupForm"; // <-- assume register
+import LoginPage from "./components/LoginForm";
+import RegisterPage from "./components/SignupForm";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // --- PRIVATE ROUTE WRAPPER ---
 const PrivateRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const authStatus = searchParams.get("auth");
+
         if (authStatus === "success") {
-          // Wait a bit for cookies to be set
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
+
         const response = await fetch(
           "https://youtube-watchtogether.onrender.com/api/verify-auth",
           {
             method: "GET",
-            credentials: "include",
+            credentials: "include", // This is crucial
           }
         );
-        setIsAuthenticated(response.ok);
+
+        if (response.ok) {
+          setIsAuthenticated(true);
+          // Clean up URL if auth=success is present
+          if (authStatus === "success") {
+            window.history.replaceState({}, "", "/");
+          }
+        } else {
+          setIsAuthenticated(false);
+        }
       } catch (error) {
+        console.error("Auth check error:", error);
         setIsAuthenticated(false);
       }
     };
+
     checkAuth();
-  }, []);
+  }, [searchParams]);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>; // or a spinner
+    return (
+      <div className="flex h-screen items-center justify-center bg-black text-white">
+        <div className="flex flex-col items-center gap-6">
+          {/* Multi-ring Spinner */}
+          <div className="relative w-20 h-20">
+            {/* Outer ring */}
+            <div className="absolute inset-0 border-4 border-pink-500/20 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-transparent border-t-pink-500 rounded-full animate-spin"></div>
+
+            {/* Middle ring */}
+            <div className="absolute inset-2 border-4 border-purple-500/20 rounded-full"></div>
+            <div
+              className="absolute inset-2 border-4 border-transparent border-t-purple-500 rounded-full animate-spin"
+              style={{ animationDuration: "1.5s" }}
+            ></div>
+
+            {/* Inner ring */}
+            <div className="absolute inset-4 border-4 border-indigo-500/20 rounded-full"></div>
+            <div
+              className="absolute inset-4 border-4 border-transparent border-t-indigo-500 rounded-full animate-spin"
+              style={{ animationDuration: "2s" }}
+            ></div>
+          </div>
+
+          {/* Text with dots animation */}
+          <p className="text-lg text-pink-400 font-medium">
+            Verifying authentication<span className="animate-pulse">...</span>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return isAuthenticated ? children : <Navigate to="/login" replace />;

@@ -3,10 +3,8 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const mongoose = require("mongoose");
-const Room = require("./models/room");
 const roomRoutes = require("./routes/room");
 const cors = require("cors");
-const Message = require("./models/message");
 const { cleanupInactiveRooms } = require("./utils/cleanupInactiveRooms");
 const setupSocketHandlers = require("./utils/socket");
 const connectDB = require("./db/db");
@@ -33,7 +31,6 @@ const io = socketIo(server, {
     origin: [
       "http://localhost:5173",
       "https://watch-together-beta.vercel.app",
-      "https://youtube-watchtogether.onrender.com",
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -45,9 +42,10 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://watch-together-beta.vercel.app",
-      "https://youtube-watchtogether.onrender.com",
     ],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(cookieParser());

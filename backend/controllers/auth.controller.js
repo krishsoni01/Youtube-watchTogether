@@ -9,6 +9,22 @@ function isValidEmail(email) {
   return regex.test(email);
 }
 
+const getCookieOptions = () => ({
+  httpOnly: true,
+  secure: true, // true in production
+  sameSite: "none", // for cross-origin
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: "/",
+});
+
+const getUsernameCookieOptions = () => ({
+  httpOnly: false,
+  secure: true,
+  sameSite: "none", // for cross-origin
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: "/",
+});
+
 const SignupController = async (req, res) => {
   try {
     let { username, email, password } = req.body;
@@ -51,18 +67,8 @@ const SignupController = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true, // for production (HTTPS)
-      sameSite: "none", // for cross-origin
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-    res.cookie("username", newUser.username, {
-      httpOnly: false, // if you need client-side access
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, getCookieOptions());
+    res.cookie("username", newUser.username, getUsernameCookieOptions());
 
     res.status(201).json({
       message: "User created successfully",
@@ -100,18 +106,8 @@ const LoginController = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true, // for production (HTTPS)
-      sameSite: "none", // for cross-origin
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-    res.cookie("username", user.username, {
-      httpOnly: false, // if you need client-side access
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, getCookieOptions());
+    res.cookie("username", user.username, getUsernameCookieOptions());
 
     res
       .status(200)
@@ -137,19 +133,10 @@ const googleAuthCallback = async (req, res) => {
         { expiresIn: "7d" }
       );
 
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: true, // for production (HTTPS)
-        sameSite: "none", // for cross-origin
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-      res.cookie("username", isUserExists.username, {
-        httpOnly: false, // if you need client-side access
-        secure: true,
-        sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-      return res.redirect("https://watch-together-beta.vercel.app/");
+      res.cookie("token", token, getCookieOptions());
+      res.cookie("username", isUserExists.username, getUsernameCookieOptions());
+      
+      return res.redirect("https://watch-together-beta.vercel.app/?auth=success");
     }
 
     const username = generateUsername(user);
@@ -168,22 +155,12 @@ const googleAuthCallback = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true, // for production (HTTPS)
-      sameSite: "none", // for cross-origin
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-    res.cookie("username", newUser.username, {
-      httpOnly: false, // if you need client-side access
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    res.redirect("https://watch-together-beta.vercel.app/");
+    res.cookie("token", token, getCookieOptions());
+    res.cookie("username", newUser.username, getUsernameCookieOptions());
+    res.redirect("https://watch-together-beta.vercel.app/?auth=success");
   } catch (error) {
     console.error("Google auth error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.redirect("https://watch-together-beta.vercel.app/login?error=auth_failed");
   }
 };
 
@@ -205,21 +182,23 @@ const verifyTokenController = (req, res) => {
 
 const clearCookies = (req, res) => {
   try {
-    res.clearCookie("token", {
+    const cookieOptions = {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
-      path: "/",
-    });
+      sameSite: 'none',
+      path: '/',
+    };
 
-    res.clearCookie("username", {
+    const usernameCookieOptions = {
       httpOnly: false,
       secure: true,
-      sameSite: "none",
-      path: "/",
-    });
+      sameSite: 'none',
+      path: '/',
+    };
 
-    // IMPORTANT: Send a response
+    res.clearCookie("token", cookieOptions);
+    res.clearCookie("username", usernameCookieOptions);
+
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Logout error:", error);
