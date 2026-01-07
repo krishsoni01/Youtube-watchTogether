@@ -176,6 +176,7 @@ const verifyTokenController = (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     res.status(200).json({ authenticated: true, user: decoded });
   } catch (error) {
+    console.error("Token verification error:", error);
     res.status(401).json({ authenticated: false });
   }
 };

@@ -65,16 +65,15 @@ const PrivateRoute = ({ children }) => {
           }
         );
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.authenticated) {
-            setIsAuthenticated(true);
-            // Clean up URL after successful auth
-            if (authStatus === "success") {
-              window.history.replaceState({}, "", "/");
-            }
-          } else {
-            setIsAuthenticated(false);
+        const data = await response.json();
+        console.log("Auth response:", data); // Debug log
+
+        // Check the authenticated property in response
+        if (response.ok && data.authenticated) {
+          setIsAuthenticated(true);
+          // Clean up URL after successful auth
+          if (authStatus === "success") {
+            window.history.replaceState({}, "", "/");
           }
         } else {
           setIsAuthenticated(false);

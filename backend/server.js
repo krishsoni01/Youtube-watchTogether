@@ -11,7 +11,10 @@ const connectDB = require("./db/db");
 const passport = require("passport");
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
 const cookieParser = require("cookie-parser");
-const { verifyTokenController , clearCookies } = require("./controllers/auth.controller");
+const {
+  verifyTokenController,
+  clearCookies,
+} = require("./controllers/auth.controller");
 
 // Try loading auth routes safely
 let authRoutes;
@@ -28,10 +31,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "https://watch-together-beta.vercel.app",
-    ],
+    origin: ["http://localhost:5173", "https://watch-together-beta.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -39,10 +39,18 @@ const io = socketIo(server, {
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://watch-together-beta.vercel.app",
-    ],
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "https://watch-together-beta.vercel.app",
+      ];
+
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -76,7 +84,7 @@ app.get("/", (req, res) => {
 // Create a verification endpoint
 app.get("/api/verify-auth", verifyTokenController);
 // Clear cookies
-app.get("/api/logout" , clearCookies)
+app.get("/api/logout", clearCookies);
 // AUTH ROUTES
 if (authRoutes) {
   app.use("/api/auth", authRoutes);
