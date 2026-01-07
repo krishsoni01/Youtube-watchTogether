@@ -12,28 +12,69 @@ const PrivateRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [searchParams] = useSearchParams();
 
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     try {
+  //       const authStatus = searchParams.get("auth");
+
+  //       if (authStatus === "success") {
+  //         await new Promise((resolve) => setTimeout(resolve, 500));
+  //       }
+
+  //       const response = await fetch(
+  //         "https://youtube-watchtogether.onrender.com/api/verify-auth",
+  //         {
+  //           method: "GET",
+  //           credentials: "include", // This is crucial
+  //         }
+  //       );
+
+  //       if (response.ok) {
+  //         setIsAuthenticated(true);
+  //         // Clean up URL if auth=success is present
+  //         if (authStatus === "success") {
+  //           window.history.replaceState({}, "", "/");
+  //         }
+  //       } else {
+  //         setIsAuthenticated(false);
+  //       }
+  //     } catch (error) {
+  //       console.error("Auth check error:", error);
+  //       setIsAuthenticated(false);
+  //     }
+  //   };
+
+  //   checkAuth();
+  // }, [searchParams]);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const authStatus = searchParams.get("auth");
 
+        // If auth=success, wait a bit for cookies to be set
         if (authStatus === "success") {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
 
         const response = await fetch(
           "https://youtube-watchtogether.onrender.com/api/verify-auth",
           {
             method: "GET",
-            credentials: "include", // This is crucial
+            credentials: "include",
           }
         );
 
         if (response.ok) {
-          setIsAuthenticated(true);
-          // Clean up URL if auth=success is present
-          if (authStatus === "success") {
-            window.history.replaceState({}, "", "/");
+          const data = await response.json();
+          if (data.authenticated) {
+            setIsAuthenticated(true);
+            // Clean up URL after successful auth
+            if (authStatus === "success") {
+              window.history.replaceState({}, "", "/");
+            }
+          } else {
+            setIsAuthenticated(false);
           }
         } else {
           setIsAuthenticated(false);
