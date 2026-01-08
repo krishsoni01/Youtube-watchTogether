@@ -1,9 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import CreationPage from "./components/CreationPage";
 import WatchTogetherRoom from "./components/WatchTogetherRoom";
 import LoginPage from "./components/LoginForm";
 import RegisterPage from "./components/SignupForm";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // --- PRIVATE ROUTE WRAPPER ---
