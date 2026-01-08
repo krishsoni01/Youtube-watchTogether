@@ -11,7 +11,6 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { Settings, X, CornerUpLeft, LogOut } from "lucide-react";
 import { toast } from "react-toastify";
-import Cookies from "js-cookie";
 
 // ===============================================
 // Utilities
@@ -161,11 +160,10 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const navigate = useNavigate();
   const greeting = getGreeting();
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
-      await axios.get("https://youtube-watchtogether.onrender.com/api/logout", {
-        withCredentials: true,
-      });
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
 
       navigate("/login");
     } catch (error) {
@@ -369,7 +367,7 @@ const CreationPage = () => {
   const [username, setUsername] = useState(null);
 
   useEffect(() => {
-    const storedUsername = Cookies.get("username");
+    const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setUsername(storedUsername);
     }

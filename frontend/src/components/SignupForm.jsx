@@ -47,9 +47,11 @@ const SignupForm = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          withCredentials: true,
         }
       );
+
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("username", res.data.username);
 
       setMessage("Signup successful! Redirecting...");
       navigate("/");

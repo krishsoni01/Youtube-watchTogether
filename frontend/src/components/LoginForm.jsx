@@ -38,15 +38,14 @@ const LoginForm = () => {
           password,
         },
         {
-          withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
 
-      // Wait a bit for cookies to be set
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("username", res.data.username);
 
       navigate("/");
     } catch (err) {

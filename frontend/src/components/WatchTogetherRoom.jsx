@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import Cookies from 'js-cookie';
 
 const YOUTUBE_API_SCRIPT_URL = "https://www.youtube.com/iframe_api";
 const SOCKET_SERVER_URL = "https://youtube-watchtogether.onrender.com";
@@ -64,7 +63,7 @@ const WatchTogetherRoom = ({ username = "guest" }) => {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
   const [videoError, setVideoError] = useState("");
-  const localUsername = Cookies.get("username") || username;
+  const localUsername = localStorage.getItem("username") || username;
 
   // --- REFS ---
   const socketRef = useRef(null);

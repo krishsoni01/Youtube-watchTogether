@@ -10,11 +10,6 @@ const setupSocketHandlers = require("./utils/socket");
 const connectDB = require("./db/db");
 const passport = require("passport");
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
-const cookieParser = require("cookie-parser");
-const {
-  verifyTokenController,
-  clearCookies,
-} = require("./controllers/auth.controller");
 
 // Try loading auth routes safely
 let authRoutes;
@@ -39,28 +34,14 @@ const io = socketIo(server, {
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      const allowedOrigins = [
-        "http://localhost:5173",
-        "https://watch-together-beta.vercel.app",
-      ];
-
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: ["http://localhost:5173", "https://watch-together-beta.vercel.app"],
+    methods: ["GET", "POST"],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-app.use(cookieParser());
 app.use(express.json());
 
 // GOOGLE AUTHENTICATION
-// Configure Passport to use Google OAuth 2.0 strategy
 passport.use(
   new GoogleStrategy(
     {
@@ -81,10 +62,7 @@ passport.use(
 app.get("/", (req, res) => {
   res.send("Watch Together Server is Running");
 });
-// Create a verification endpoint
-app.get("/api/verify-auth", verifyTokenController);
-// Clear cookies
-app.get("/api/logout", clearCookies);
+
 // AUTH ROUTES
 if (authRoutes) {
   app.use("/api/auth", authRoutes);
@@ -95,6 +73,7 @@ app.use("/api/rooms", roomRoutes(io));
 // =========================================================================
 // 4. AUTO-CLEANUP: DELETE INACTIVE ROOMS (> 1 HOUR)
 // =========================================================================
+
 // Run cleanup on server start
 cleanupInactiveRooms(io);
 // Run cleanup every 10 minutes
