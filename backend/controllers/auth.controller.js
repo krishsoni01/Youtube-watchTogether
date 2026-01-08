@@ -15,6 +15,7 @@ const getCookieOptions = () => ({
   sameSite: "none", // for cross-origin
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: "/",
+  domain: "https://watch-together-beta.vercel.app",
 });
 
 const getUsernameCookieOptions = () => ({
@@ -23,6 +24,7 @@ const getUsernameCookieOptions = () => ({
   sameSite: "none", // for cross-origin
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: "/",
+  domain: "https://watch-together-beta.vercel.app",
 });
 
 const SignupController = async (req, res) => {

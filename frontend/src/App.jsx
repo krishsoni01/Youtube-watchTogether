@@ -54,7 +54,7 @@ const PrivateRoute = ({ children }) => {
 
         // If auth=success, wait a bit for cookies to be set
         if (authStatus === "success") {
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
         const response = await fetch(
