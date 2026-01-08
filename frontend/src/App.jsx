@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import CreationPage from "./components/CreationPage";
 import WatchTogetherRoom from "./components/WatchTogetherRoom";
 import LoginPage from "./components/LoginForm";

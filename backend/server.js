@@ -27,7 +27,7 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: ["http://localhost:5173", "https://watch-together-beta.vercel.app"],
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST" , "PUT", "DELETE"],
     credentials: true,
   },
 });
@@ -35,7 +35,7 @@ const io = socketIo(server, {
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://watch-together-beta.vercel.app"],
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST" , "PUT", "DELETE"],
     credentials: true,
   })
 );
