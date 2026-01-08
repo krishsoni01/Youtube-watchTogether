@@ -90,7 +90,6 @@ function App() {
           }
         />
       </Routes>
-      <OAuthHandler />
     </>
   );
 }
