@@ -83,6 +83,11 @@ const getUsersController = async (req, res) => {
   }
 };
 
+let ioInstance = null;
+const setIO = (io) => {
+  ioInstance = io;
+};
+
 const deleteRoomController = async (req, res) => {
   try {
     const { roomCode } = req.params;
@@ -107,13 +112,13 @@ const deleteRoomController = async (req, res) => {
     }
 
     // Notify all connected users via Socket.IO
-    if (io) {
-      io.in(normalizedRoomCode).emit("roomDeleted", {
+    if (ioInstance) {
+      ioInstance.in(normalizedRoomCode).emit("roomDeleted", {
         message: "Room has been deleted by the host.",
       });
 
       // Disconnect all users in the room
-      const sockets = await io.in(normalizedRoomCode).fetchSockets();
+      const sockets = await ioInstance.in(normalizedRoomCode).fetchSockets();
       for (const socket of sockets) {
         socket.leave(normalizedRoomCode);
         socket.disconnect(true);
@@ -146,4 +151,5 @@ module.exports = {
   joinRoomController,
   getUsersController,
   deleteRoomController,
+  setIO,
 };

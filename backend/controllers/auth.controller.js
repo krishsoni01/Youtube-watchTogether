@@ -115,9 +115,9 @@ const googleAuthCallback = async (req, res) => {
       );
 
       res.redirect(
-        `https://watch-together-beta.vercel.app/?auth=success&token=${token}&username=${encodeURIComponent(
-          isUserExists.username
-        )}`
+        `https://watch-together-beta.vercel.app/?auth=success&token=${encodeURIComponent(
+          token
+        )}&username=${encodeURIComponent(isUserExists.username)}`
       );
     }
 
@@ -138,9 +138,9 @@ const googleAuthCallback = async (req, res) => {
     );
 
     res.redirect(
-      `https://watch-together-beta.vercel.app/?auth=success&token=${token}&username=${encodeURIComponent(
-        newUser.username
-      )}`
+      `https://watch-together-beta.vercel.app/?auth=success&token=${encodeURIComponent(
+        token
+      )}&username=${encodeURIComponent(newUser.username)}`
     );
   } catch (error) {
     console.error("Google auth error:", error);

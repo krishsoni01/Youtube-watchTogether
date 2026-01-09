@@ -10,6 +10,7 @@ const setupSocketHandlers = require("./utils/socket");
 const connectDB = require("./db/db");
 const passport = require("passport");
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
+const { setIO } = require("./controllers/room.controller");
 
 // Try loading auth routes safely
 let authRoutes;
@@ -67,6 +68,9 @@ app.get("/", (req, res) => {
 if (authRoutes) {
   app.use("/api/auth", authRoutes);
 }
+
+setIO(io); // Pass io instance to room controller
+
 // app.use("/api/rooms", roomRoutes);
 app.use("/api/rooms", roomRoutes(io));
 
