@@ -15,7 +15,11 @@ const generateUsername = (user) => {
 
   // If sanitization results in empty string, use fallback
   if (!sanitized || sanitized.length === 0) {
-    sanitized = "user";
+    sanitized = "User";
+  } else {
+    // Capitalize the first letter
+    sanitized =
+      sanitized.charAt(0).toUpperCase() + sanitized.slice(1).toLowerCase();
   }
 
   // Limit length to reasonable size

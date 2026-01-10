@@ -1,95 +1,40 @@
-const dotenv = require("dotenv").config();
-const express = require("express");
+require("dotenv").config();
 const http = require("http");
 const socketIo = require("socket.io");
-const mongoose = require("mongoose");
-const roomRoutes = require("./routes/room");
-const cors = require("cors");
+const { app, setupAppRoutes, corsOptions } = require("./app");
+const connectDB = require("./db/db");
 const { cleanupInactiveRooms } = require("./utils/cleanupInactiveRooms");
 const setupSocketHandlers = require("./utils/socket");
-const connectDB = require("./db/db");
-const passport = require("passport");
-const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
-const { setIO } = require("./controllers/room.controller");
-
-// Try loading auth routes safely
-let authRoutes;
-try {
-  authRoutes = require("./routes/auth");
-} catch (err) {
-  console.warn("⚠️ Auth routes not found or invalid. Skipping /api/auth.");
-}
 
 // =========================================================================
-// 2. INITIALIZATION
+// SERVER INITIALIZATION
 // =========================================================================
-const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: {
-    origin: ["http://localhost:5173", "https://watch-together-beta.vercel.app"],
-    methods: ["GET", "POST" , "PUT", "DELETE"],
-    credentials: true,
-  },
+  cors: corsOptions,
 });
-
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "https://watch-together-beta.vercel.app"],
-    methods: ["GET", "POST" , "PUT", "DELETE"],
-    credentials: true,
-  })
-);
-app.use(express.json());
-
-// GOOGLE AUTHENTICATION
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.CLIENT_ID,
-      clientSecret: process.env.CLIENT_SECRET,
-      callbackURL:
-        process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback",
-    },
-    (accessToken, refreshToken, profile, done) => {
-      // Here, you would typically find or create a user in your database
-      // For this example, we'll just return the profile
-      return done(null, profile);
-    }
-  )
-);
-
-// Default route
-app.get("/", (req, res) => {
-  res.send("Watch Together Server is Running");
-});
-
-// AUTH ROUTES
-if (authRoutes) {
-  app.use("/api/auth", authRoutes);
-}
-
-setIO(io); // Pass io instance to room controller
-
-// app.use("/api/rooms", roomRoutes);
-app.use("/api/rooms", roomRoutes(io));
 
 // =========================================================================
-// 4. AUTO-CLEANUP: DELETE INACTIVE ROOMS (> 1 HOUR)
+// SETUP APP ROUTES WITH IO INSTANCE
+// =========================================================================
+setupAppRoutes(io);
+
+// =========================================================================
+// AUTO-CLEANUP: DELETE INACTIVE ROOMS (> 1 HOUR)
 // =========================================================================
 
 // Run cleanup on server start
 cleanupInactiveRooms(io);
-// Run cleanup every 10 minutes
+// Run cleanup every 30 minutes
 setInterval(() => cleanupInactiveRooms(io), 30 * 60 * 1000);
 
 // =========================================================================
-// 5. SOCKET.IO CONNECTION LISTENER
+// SOCKET.IO CONNECTION LISTENER
 // =========================================================================
 setupSocketHandlers(io);
 
 // =========================================================================
-// 6. DATABASE AND SERVER STARTUP
+// DATABASE AND SERVER STARTUP
 // =========================================================================
 const PORT = process.env.PORT || 5000;
 

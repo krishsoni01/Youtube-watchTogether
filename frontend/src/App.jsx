@@ -34,7 +34,6 @@ function App() {
 
     if (auth === "success" && token && username) {
       try {
-        // Store credentials FIRST
         localStorage.setItem("token", decodeURIComponent(token));
         localStorage.setItem("username", decodeURIComponent(username));
 

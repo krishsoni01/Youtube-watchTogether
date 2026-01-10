@@ -26,4 +26,9 @@ router.get(
   googleAuthCallback
 );
 
+// Wake-up route to keep the server alive
+router.get("/wake-up", (req, res) => {
+  res.status(200).json({ status: "awake" });
+});
+
 module.exports = router;
