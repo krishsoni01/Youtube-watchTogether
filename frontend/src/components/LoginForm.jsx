@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState , useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
@@ -14,6 +14,23 @@ const LoginForm = () => {
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  useEffect(() => {
+    // Preemptively ping the server when component mounts
+    const wakeServer = async () => {
+      try {
+        await fetch(
+          "https://youtube-watchtogether.onrender.com/api/auth/wake-up",
+          { method: "GET" }
+        );
+      } catch (error) {
+        // Silent fail - server will wake up anyway
+        console.log("Server warming up...");
+      }
+    };
+
+    wakeServer();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

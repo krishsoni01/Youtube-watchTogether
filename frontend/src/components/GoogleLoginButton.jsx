@@ -36,7 +36,7 @@ const GoogleLoginButton = () => {
         window.location.href = `https://youtube-watchtogether.onrender.com/api/auth/google`;
       }
     } catch (error) {
-      setWakeupMessage("Server is starting up, please wait...");
+      setWakeupMessage("Server is starting up...");
 
       // Retry mechanism
       let retries = 0;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -159,6 +159,23 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const [creatingRoom, setCreatingRoom] = useState(false);
   const navigate = useNavigate();
   const greeting = getGreeting();
+
+  useEffect(() => {
+    // Preemptively ping the server when component mounts
+    const wakeServer = async () => {
+      try {
+        await fetch(
+          "https://youtube-watchtogether.onrender.com/api/auth/wake-up",
+          { method: "GET" }
+        );
+      } catch (error) {
+        // Silent fail - server will wake up anyway
+        console.log("Server warming up...");
+      }
+    };
+
+    wakeServer();
+  }, []);
 
   const handleLogout = () => {
     try {
