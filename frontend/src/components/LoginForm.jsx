@@ -1,4 +1,4 @@
-import { useState , useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
@@ -11,6 +11,7 @@ const LoginForm = () => {
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,6 +32,26 @@ const LoginForm = () => {
 
     wakeServer();
   }, []);
+
+  // Progress animation when loading
+  useEffect(() => {
+    let progressInterval;
+    if (loading) {
+      setProgress(0);
+      progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 95) return 95; // Cap at 95% until actual success
+          return prev + 2;
+        });
+      }, 100); // Smooth increment every 100ms
+    } else {
+      setProgress(0);
+    }
+
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+    };
+  }, [loading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,10 +82,15 @@ const LoginForm = () => {
         }
       );
 
+      setProgress(100);
+
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("username", res.data.username);
 
-      navigate("/");
+      // Small delay to show completion
+      setTimeout(() => {
+        navigate("/");
+      }, 300);
     } catch (err) {
       console.error("Login error:", err.response || err);
       // 🔔 Vibrate on error (mobile only)
@@ -73,7 +99,9 @@ const LoginForm = () => {
       }
       setMessage(err.response?.data?.message || "Login failed");
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 300);
     }
   };
 
@@ -127,36 +155,75 @@ const LoginForm = () => {
             </span>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            onClick={() => navigator.vibrate && navigator.vibrate(40)}
-            className="w-full py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Logging in...
-              </>
-            ) : (
-              "Login"
+          <div className="w-full">
+            <button
+              type="submit"
+              disabled={loading}
+              onClick={() => navigator.vibrate && navigator.vibrate(40)}
+              className="w-full py-3 rounded-lg font-semibold bg-pink-600 hover:bg-pink-500 text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center relative overflow-hidden"
+            >
+              {/* Progress Bar Background */}
+              {loading && (
+                <div
+                  className="absolute left-0 top-0 h-full bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400 transition-all duration-100 ease-out opacity-40"
+                  style={{ width: `${progress}%` }}
+                />
+              )}
+
+              {/* Button Content */}
+              <div className="relative z-10 flex items-center">
+                {loading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-5 w-5 mr-2"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
+              </div>
+            </button>
+
+            {/* Progress Indicator */}
+            {loading && (
+              <div className="mt-2 text-center">
+                <div className="inline-flex items-center gap-2 text-xs text-gray-400">
+                  <div className="flex gap-1">
+                    <div
+                      className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <div
+                      className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <div
+                      className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
+                  </div>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+              </div>
             )}
-          </button>
+          </div>
           {/* // Google Login Button */}
           <GoogleLoginButton />
         </form>
