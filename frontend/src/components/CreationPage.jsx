@@ -157,29 +157,8 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const [roomId, setRoomId] = useState(null);
   const [copied, setCopied] = useState(false); // <-- track copy state
   const [creatingRoom, setCreatingRoom] = useState(false);
-  const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
   const greeting = getGreeting();
-
-  // Progress animation when creating room
-  useEffect(() => {
-    let progressInterval;
-    if (creatingRoom) {
-      setProgress(0);
-      progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 95) return 95; // Cap at 95% until actual success
-          return prev + 2;
-        });
-      }, 100); // Smooth increment every 100ms
-    } else {
-      setProgress(0);
-    }
-
-    return () => {
-      if (progressInterval) clearInterval(progressInterval);
-    };
-  }, [creatingRoom]);
 
   const handleLogout = () => {
     try {
@@ -205,8 +184,6 @@ const HomeView = ({ onScreenChange, userId, username }) => {
         hostName: username,
         users: [username],
       });
-
-      setProgress(100);
 
       setRoomId(newRoomId);
       // Small delay to show completion
@@ -287,86 +264,50 @@ const HomeView = ({ onScreenChange, userId, username }) => {
       </div>
 
       {/* Actions */}
-      <div className="w-full flex flex-col space-y-2 mt-10 px-6">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => {
-              handleCreateRoom();
-              if (navigator.vibrate) navigator.vibrate(40);
-            }}
-            disabled={!userId || creatingRoom}
-            className="flex-1 py-3 rounded-lg font-semibold bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative overflow-hidden"
-          >
-            {/* Progress Bar Background */}
-            {creatingRoom && (
-              <div
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400 transition-all duration-100 ease-out opacity-30"
-                style={{ width: `${progress}%` }}
-              />
-            )}
-
-            {/* Button Content */}
-            <div className="relative z-10 flex items-center gap-2">
-              {creatingRoom ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Creating...
-                </>
-              ) : (
-                "New room"
-              )}
-            </div>
-          </button>
-
-          <button
-            onClick={() => {
-              onScreenChange("join");
-              if (navigator.vibrate) navigator.vibrate(40);
-            }}
-            disabled={!userId}
-            className="flex-1 py-3 rounded-lg font-semibold text-white bg-gray-800 hover:bg-gray-700"
-          >
-            Join with a code
-          </button>
-        </div>
-
-        {/* Progress Indicator - Now outside the flex container */}
-        {creatingRoom && (
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 text-xs text-gray-400">
-              <div className="flex gap-1">
-                <div
-                  className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "0ms" }}
+      <div className="w-full flex space-x-2 mt-10 px-6">
+        <button
+          onClick={() => {
+            handleCreateRoom();
+            if (navigator.vibrate) navigator.vibrate(40);
+          }}
+          disabled={!userId || creatingRoom}
+          className="flex-1 py-3 rounded-lg font-semibold bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {creatingRoom ? (
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
                 />
-                <div
-                  className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "150ms" }}
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
-                <div
-                  className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "300ms" }}
-                />
-              </div>
-              <span>{Math.round(progress)}%</span>
-            </div>
-          </div>
-        )}
+              </svg>
+              Creating...
+            </>
+          ) : (
+            "New room"
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            onScreenChange("join");
+            if (navigator.vibrate) navigator.vibrate(40);
+          }}
+          disabled={!userId}
+          className="flex-1 py-3 rounded-lg font-semibold text-white bg-gray-800 hover:bg-gray-700"
+        >
+          Join with a code
+        </button>
       </div>
 
       {/* Popup */}
