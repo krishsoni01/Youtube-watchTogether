@@ -19,6 +19,14 @@ const io = socketIo(server, {
 // =========================================================================
 setupAppRoutes(io);
 
+// Optional: Log wake-up pings (add after setupAppRoutes)
+app.use((req, res, next) => {
+  if (req.path === "/api/auth/wake-up") {
+    console.log("🏓 Keep-alive ping received at", new Date().toISOString());
+  }
+  next();
+});
+
 // =========================================================================
 // AUTO-CLEANUP: DELETE INACTIVE ROOMS (> 1 HOUR)
 // =========================================================================

@@ -161,23 +161,6 @@ const HomeView = ({ onScreenChange, userId, username }) => {
   const navigate = useNavigate();
   const greeting = getGreeting();
 
-  useEffect(() => {
-    // Preemptively ping the server when component mounts
-    const wakeServer = async () => {
-      try {
-        await fetch(
-          "https://youtube-watchtogether.onrender.com/api/auth/wake-up",
-          { method: "GET" }
-        );
-      } catch (error) {
-        // Silent fail - server will wake up anyway
-        console.log("Server warming up...");
-      }
-    };
-
-    wakeServer();
-  }, []);
-
   // Progress animation when creating room
   useEffect(() => {
     let progressInterval;
